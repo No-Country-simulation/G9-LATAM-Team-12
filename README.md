@@ -58,7 +58,7 @@ G9-LATAM-Team-12/
     │   │   ├── model/        # Entidades y DTOs
     │   │   └── config/       # Configuraciones (Swagger, OCI)
     │   └── resources/        # application.properties y recursos
-    └── pom.xml              # Dependencias y configuración Maven
+    └── pom.xml               # Dependencias y configuración Maven
 ```
 
 ## Desarrolladores
