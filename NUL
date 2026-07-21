@@ -1471,3 +1471,13 @@ Consider running this 'runBlockingCancellable' under a read action outside your 
 2026-07-17 00:37:22,843 [6019680]   WARN - #c.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Suppressed a frequent exception logged for the 10th time: SdkBridge has to be available for the SdkEntity: 17 (WSL); type: JavaSDK; path: //wsl.localhost/Ubuntu/usr/lib/jvm/java-1.17.0-openjdk-amd64
 2026-07-17 00:37:22,843 [6019680]   WARN - #c.i.w.i.i.j.s.JpsGlobalModelSynchronizerImpl - Suppressed a frequent exception logged for the 10th time: SdkBridge has to be available for the SdkEntity: 17 (WSL) (2); type: JavaSDK; path: //wsl.localhost/Ubuntu/usr/lib/jvm/java-17-openjdk-amd64
 2026-07-17 00:44:23,716 [6440553]   WARN - #c.i.o.progress - Suppressed a frequent exception logged for the 5th time: 'runBlockingCancellable' is forbidden in the Write Action because it may start a long-running computation. This can cause UI freezes.
+2026-07-17 01:04:30.931 [TRC] [daemon-client-ws] /system/events/handleUri/12604 incoming exception com.jetbrains.app.daemon.endpoints.runtime.shared.IncomingChannelClosed: Incoming channel closed with reason: CloseReason(reason=CLOSED_ABNORMALLY, message=Connection was closed without close frame)
+2026-07-17 01:04:31,002 [7647839]   WARN - #c.i.p.i.s.IjentSessionProcessMediator - The process IjentId(ijent-0-wsl-Ubuntu) suddenly exited with the code 1073807364
+com.intellij.platform.ijent.IjentUnavailableException$CommunicationFailure: The process IjentId(ijent-0-wsl-Ubuntu) suddenly exited with the code 1073807364
+	at com.intellij.platform.ijent.spi.IjentSessionMediatorUtils.ijentProcessExitAwaiter(IjentSessionMediatorUtils.kt:251)
+	at com.intellij.platform.ijent.spi.IjentSessionProcessMediator$Companion$create$awaiterScope$1.invokeSuspend(IjentSessionProcessMediator.kt:109)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at com.intellij.platform.ijent.spi.IjentThreadPool$IjentThreadFactory$newThread$thread$1.run(IjentThreadPool.kt:102)

@@ -2,6 +2,7 @@ package com.g9latam.team12.backend.service;
 
 import com.g9latam.team12.backend.dto.AnalisisResponseDTO;
 import com.g9latam.team12.backend.dto.ConsumoRequestDTO;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,6 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * la aplicación mientras Data Science entrega el modelo entrenado.
  */
 @Service
+@Profile("mock")
 public class ModeloPredictorMock implements ModeloPredictor {
 
     @Override
