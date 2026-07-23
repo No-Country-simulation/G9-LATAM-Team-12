@@ -159,4 +159,82 @@ class AnalisisEnergeticoControllerTest {
                 .andExpect(jsonPath("$.error").value("Error de validación"))
                 .andExpect(jsonPath("$.detalles[0].campo").value("cantidadEquipos"));
     }
+    @Test
+    void ineficienteConHorarioPicoSugierePeakShaving() throws Exception {
+        String requestJson = """
+            {
+              "consumo_kwh": 450,
+              "uso_horario_pico": true,
+              "cantidad_equipos": 5,
+              "tipo_inmueble": "Depto",
+              "horas_alto_consumo": 3
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recomendaciones[0]").value(
+                        org.hamcrest.Matchers.containsString("fuera del horario pico")));
+    }
+
+    @Test
+    void ineficienteSinHorarioPicoSugiereEliminarStandBy() throws Exception {
+        String requestJson = """
+            {
+              "consumo_kwh": 450,
+              "uso_horario_pico": false,
+              "cantidad_equipos": 5,
+              "tipo_inmueble": "Depto",
+              "horas_alto_consumo": 3
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recomendaciones[0]").value(
+                        org.hamcrest.Matchers.containsString("stand-by")));
+    }
+
+    @Test
+    void casaConMuchasHorasSumaRecomendacionDeAislamiento() throws Exception {
+        String requestJson = """
+            {
+              "consumo_kwh": 450,
+              "uso_horario_pico": true,
+              "cantidad_equipos": 5,
+              "tipo_inmueble": "Casa",
+              "horas_alto_consumo": 8
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                // acá deberían aparecer DOS recomendaciones: peak shaving + aislamiento
+                .andExpect(jsonPath("$.recomendaciones.length()").value(2));
+    }
+
+    @Test
+    void ejemploCompletoDelEnunciadoDevuelveCostoEstimadoCorrecto() throws Exception {
+        String requestJson = """
+            {
+              "consumo_kwh": 420,
+              "uso_horario_pico": true,
+              "cantidad_equipos": 10,
+              "tipo_inmueble": "Casa",
+              "horas_alto_consumo": 8
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.costo_estimado_mensual").value(315.00));
+    }
 }

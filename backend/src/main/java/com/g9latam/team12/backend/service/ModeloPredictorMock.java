@@ -5,6 +5,7 @@ import com.g9latam.team12.backend.dto.ConsumoRequestDTO;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -18,12 +19,22 @@ import java.util.concurrent.ThreadLocalRandom;
 @Profile("mock")
 public class ModeloPredictorMock implements ModeloPredictor {
 
+    private final RecomendacionService recomendacionService;
+    private final CostoService costoService;
+
+    public ModeloPredictorMock(RecomendacionService recomendacionService, CostoService costoService) {
+        this.recomendacionService = recomendacionService;
+        this.costoService = costoService;
+    }
+
     @Override
     public AnalisisResponseDTO predecir(ConsumoRequestDTO request) {
         String categoria = calcularCategoria(request.consumoKwh());
         Double probabilidad = generarProbabilidadSimulada();
+        List<String> recomendaciones = recomendacionService.generarRecomendaciones(categoria, request);
+        Double costoEstimadoMensual = costoService.calcularCostoMensual(request.consumoKwh());
 
-        return new AnalisisResponseDTO(categoria, probabilidad);
+        return new AnalisisResponseDTO(categoria, probabilidad, recomendaciones, costoEstimadoMensual);
     }
 
     private String calcularCategoria(Double consumoKwh) {
