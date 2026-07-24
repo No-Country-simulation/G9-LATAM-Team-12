@@ -1,3 +1,4 @@
+package com.g9latam.team12.backend.dto;
 import java.time.LocalDateTime;
 
 // Clase que define el formato estándar de error
