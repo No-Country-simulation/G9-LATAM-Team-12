@@ -236,5 +236,4 @@ class AnalisisEnergeticoControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.costo_estimado_mensual").value(315.00));
-    }
-}
+    }}
