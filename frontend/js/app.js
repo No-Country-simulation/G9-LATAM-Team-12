@@ -24,7 +24,7 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
         }
 
         if (!response.ok|| !data) { // evitamos que mostrarResultado() reciba algo inválido.
-            console.error('Error de validación o respuesta inválida:', data);
+            mostrarErrores(data);
             return;
         }
 
@@ -32,12 +32,40 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
     } catch (error) {   // Este catch atrapa errores de red
         console.error('Error de conexión:', error);
+        mostrarErrorConexion();
     }
 });
 
+//  caso feliz, HTTP 200
 function mostrarResultado(data) {
     document.getElementById('resultado').innerHTML = `
         <h3>Categoría: ${data.categoria}</h3>
         <p>Probabilidad: ${(data.probabilidad * 100).toFixed(0)}%</p>
+    `;
+}
+
+//  HTTP 400 con el formato que arma TratadorDeErrores en el backend
+function mostrarErrores(data) {
+    const contenedor = document.getElementById('resultado');
+
+    if (!data || !data.detalles) {
+        contenedor.innerHTML = `<p class="error">Ocurrió un error inesperado. Revisá los datos ingresados.</p>`;
+        return;
+    }
+
+    const listaErrores = data.detalles
+        .map(d => `<li>${d.campo}: ${d.mensaje}</li>`)
+        .join('');
+
+    contenedor.innerHTML = `
+        <p class="error">${data.error}</p>
+        <ul class="error-lista">${listaErrores}</ul>
+    `;
+}
+
+//  Muestra un mensaje cuando falla la conexión misma
+function mostrarErrorConexion() {
+    document.getElementById('resultado').innerHTML = `
+        <p class="error">No se pudo conectar con el servidor. Verificá que el backend esté corriendo.</p>
     `;
 }
