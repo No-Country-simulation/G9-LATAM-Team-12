@@ -38,6 +38,9 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
     }
 });
 
+
+let graficoActual = null;   // guardamos referencia para poder destruirlo y evitar duplicados
+
 //  caso feliz, HTTP 200
 function mostrarResultado(data) {
     // Convertimos el array de recomendaciones en una lista HTML
@@ -52,6 +55,48 @@ function mostrarResultado(data) {
         <h4>Recomendaciones:</h4>
         <ul>${listaRecomendaciones}</ul>
     `;
+
+    dibujarGrafico(data);
+}
+
+function dibujarGrafico(data) {
+    const ctx = document.getElementById('grafico-probabilidad');
+
+    if (graficoActual) {
+        graficoActual.destroy();
+    }
+
+    const color = obtenerColorPorCategoria(data.categoria);
+
+    graficoActual = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Probabilidad', 'Resto'],
+            datasets: [{
+                data: [data.probabilidad * 100, 100 - data.probabilidad * 100],
+                backgroundColor: [color, '#e0e0e0']
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+//  Indicador visual tipo semáforo según la categoría
+function obtenerColorPorCategoria(categoria) {
+    switch (categoria) {
+        case 'Eficiente':
+            return '#008000';
+        case 'Moderado':
+            return '#FF7800';
+        case 'Ineficiente':
+            return '#FF0000';
+        default:
+            return '#9E9E9E';   // por si llega algo inesperado
+    }
 }
 
 //  HTTP 400 con el formato que arma TratadorDeErrores en el backend
