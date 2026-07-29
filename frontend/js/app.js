@@ -19,6 +19,8 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
         let data;
         try {   // Intentamos leer el body de la respuesta como JSON.
             data = await response.json();
+            console.log("Respuesta completa:", data);
+        console.log("Costo:", data.costo_estimado_mensual);
         } catch {   // Si falla, dejamos "data" en null en vez de que el programa se rompa.
             data = null;
         }
@@ -38,9 +40,17 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
 //  caso feliz, HTTP 200
 function mostrarResultado(data) {
+    // Convertimos el array de recomendaciones en una lista HTML
+    const listaRecomendaciones = data.recomendaciones
+        .map(r => `<li>${r}</li>`)
+        .join('');
+
     document.getElementById('resultado').innerHTML = `
         <h3>Categoría: ${data.categoria}</h3>
         <p>Probabilidad: ${(data.probabilidad * 100).toFixed(0)}%</p>
+        <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
+        <h4>Recomendaciones:</h4>
+        <ul>${listaRecomendaciones}</ul>
     `;
 }
 
