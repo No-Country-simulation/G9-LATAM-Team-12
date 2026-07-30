@@ -1,19 +1,25 @@
 package com.g9latam.team12.backend.infra.errores;
+
+import com.g9latam.team12.backend.dto.ErrorRespuestaDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 // Indica que esta clase manejará excepciones de forma global
 // para TODOS los controladores de la aplicación
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // Manejo de errores de validación (cuando usas @Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
+
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
 
         // Se recorren todos los errores de los campos
@@ -23,7 +29,6 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-
         // Se crea la respuesta de error usando tu clase estándar
         ErrorResponse error = new ErrorResponse(
                 "400",                // Código de error
@@ -35,18 +40,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-
     // Manejo de errores de negocio (excepciones personalizadas)
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessError(BusinessException ex) {
 
+    public ResponseEntity<ErrorResponse> handleBusinessError(BusinessException ex) {
         // Se crea el error con el mensaje de la excepción
         ErrorResponse error = new ErrorResponse(
                 "422",                    // Código semántico (Unprocessable Entity)
                 ex.getMessage(),         // Mensaje personalizado
                 "Error de negocio"       // Descripción adicional
         );
-
         // Se devuelve HTTP 422
         return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
@@ -54,6 +57,7 @@ public class GlobalExceptionHandler {
 
     // Manejo de errores por argumentos inválidos
     @ExceptionHandler(IllegalArgumentException.class)
+
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
 
         // Se construye el error con el mensaje recibido
@@ -61,15 +65,15 @@ public class GlobalExceptionHandler {
                 "400",
                 ex.getMessage(),
                 "Parámetro inválido"
-        );
 
+        );
         // Se devuelve HTTP 400
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-
-    //  Manejo de errores generales (cualquier excepción no controlada)
+    // Manejo de errores generales (cualquier excepción no controlada)
     @ExceptionHandler(Exception.class)
+
     public ResponseEntity<ErrorResponse> handleGeneralError(Exception ex) {
 
         //no exponer detalles internos (seguridad)
