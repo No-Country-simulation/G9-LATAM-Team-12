@@ -1,6 +1,13 @@
 document.getElementById('form-consumo').addEventListener('submit', async (e) => {
     e.preventDefault(); // evita que la página se recargue (comportamiento por defecto del form)
 
+    const boton = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = boton.textContent;
+
+    // Deshabilitamos el botón y cambiamos el texto mientras esperamos la respuesta
+    boton.disabled = true;
+    boton.textContent = 'Analizando...';
+
     const datos = {
         consumo_kwh: Number(document.getElementById('consumoKwh').value),
         uso_horario_pico: document.getElementById('usoHorarioPico').checked,
@@ -34,7 +41,10 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
     } catch (error) {   // Este catch atrapa errores de red
         console.error('Error de conexión:', error);
-        mostrarErrorConexion();
+        mostrarErrorConexion();        
+    } finally { // Restauramos el botón a su estado original
+        boton.disabled = false;
+        boton.textContent = textoOriginal;
     }
 });
 
