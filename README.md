@@ -52,15 +52,21 @@ EnergiAI es una solución inteligente desarrollada como parte del Hackathon para
 > Estructura objetivo del proyecto.
 
 G9-LATAM-Team-12/
-└── backend/
-    ├── src/
-    │   ├── main/
-    │   │   ├── controller/   # Endpoints de la API
-    │   │   ├── service/      # Lógica de negocio
-    │   │   ├── dto/          # DTOs de entrada y salida
-    │   │   ├── entity/       # Entidades JPA
-    │   │   └── resources/    # application.properties y recursos
-    └── pom.xml               # Dependencias y configuración Maven
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── controller/   # Endpoints de la API
+│   │   │   ├── service/      # Lógica de negocio
+│   │   │   ├── dto/          # DTOs de entrada y salida
+│   │   │   ├── entity/       # Entidades JPA
+│   │   │   └── resources/    # application.properties y recursos
+│   └── pom.xml               # Dependencias y configuración Maven
+└── frontend/
+    ├── index.html
+    ├── css/
+    │   └── style.css
+    └── js/
+        └── app.js
 ```
 
 ## Desarrolladores
