@@ -119,15 +119,14 @@ function mostrarErrores(data) {
     }
 
     const listaErrores = data.detalles
-        .map(d => `<li>${d.campo}: ${d.mensaje}</li>`)
+        .map(d => {
+            if (d.campo && d.mensaje) {
+                return `<li>${d.campo}: ${d.mensaje}</li>`;
+            }
+            return `<li>${d}</li>`;
+        })
         .join('');
-
-    contenedor.innerHTML = `
-        <p class="error">${data.error}</p>
-        <ul class="error-lista">${listaErrores}</ul>
-    `;
 }
-
 //  Muestra un mensaje cuando falla la conexión misma
 function mostrarErrorConexion() {
     document.getElementById('resultado').innerHTML = `

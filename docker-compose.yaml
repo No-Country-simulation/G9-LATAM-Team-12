@@ -1,7 +1,6 @@
 version: '3.3'
 
 services:
-  # 1. Servicio del Modelo de Machine Learning (Python / FastAPI)
   data-ml-app:
     build:
       context: ./data/Modelo Machine
@@ -19,7 +18,18 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - MODELO_API_URL=http://data-ml-app:8000
+      - MODELO_API_URL=http://data-ml-app:8000/predict
     depends_on:
       - data-ml-app
+    restart: always
+
+  frontend-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-app
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-app
     restart: always
