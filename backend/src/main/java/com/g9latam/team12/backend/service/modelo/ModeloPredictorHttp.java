@@ -59,7 +59,7 @@ public class ModeloPredictorHttp implements ModeloPredictor {
         ModeloRequestPayload payload = ModeloRequestPayload.from(request);
         try {
             ModeloPrediccionResponse response = restTemplate.postForObject(
-                    modeloApiUrl , payload, ModeloPrediccionResponse.class);
+                    modeloApiUrl, payload, ModeloPrediccionResponse.class);
 
             if (response == null) {
                 throw new BusinessException("El servicio de modelo devolvió una respuesta vacía.");
