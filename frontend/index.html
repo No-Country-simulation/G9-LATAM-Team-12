@@ -60,15 +60,32 @@
 
     <div id="navbar-menu" class="navbar-menu">
         <div class="navbar-end">
-            <a class="navbar-item" id="btn-historico" data-target="modal-historico">
+            <!-- Menú para usuarios NO autenticados -->
+            <div id="menu-invitado" class="navbar-item">
+                <div class="buttons">
+                    <a class="button is-light" data-target="modal-registro">Registrarse</a>
+                    <a class="button is-primary" data-target="modal-login">Ingresar</a>
+                </div>
+            </div>
+
+            <!-- Menú para usuarios autenticados (separados para el menú hamburguesa) -->
+            <div class="navbar-item item-usuario is-hidden">
+                <span id="user-email-display" class="has-text-weight-bold" style="color: var(--color-primario);"></span>
+            </div>
+            <a class="navbar-item item-usuario is-hidden" id="btn-historico" data-target="modal-historico">
                 Ver histórico
             </a>
-            <a class="navbar-item" id="btn-usuarios" data-target="modal-usuarios">
+            <a class="navbar-item item-usuario is-hidden" id="btn-usuarios" data-target="modal-usuarios">
                 Usuarios
             </a>
-            <a class="navbar-item" id="btn-subir-csv" data-target="modal-csv">
+            <a class="navbar-item item-usuario is-hidden" id="btn-subir-csv" data-target="modal-csv">
                 Subir .csv
             </a>
+            <div class="navbar-item item-usuario is-hidden">
+                <button class="button is-danger is-light is-small is-fullwidth" id="btn-logout">Salir</button>
+            </div>
+
+            <!-- Botón de Tema oscuro/claro -->
             <div class="navbar-item">
                 <button class="button is-small" id="toggle-tema" type="button" aria-label="Cambiar tema">
                     <span id="icono-tema">🌙</span>
@@ -155,6 +172,62 @@
             <p class="has-text-grey">
                 Acá vamos a listar los análisis previos una vez que el backend exponga el endpoint correspondiente (por ejemplo, <code>GET /analisis-energetico</code>).
             </p>
+        </section>
+    </div>
+</div>
+<!-- ===== Modal: Login ===== -->
+<div class="modal" id="modal-login">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Ingresar</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <form id="form-login">
+                <div class="field">
+                    <label class="label">Email</label>
+                    <div class="control">
+                        <input class="input" type="email" id="login-email" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Contraseña</label>
+                    <div class="control">
+                        <input class="input" type="password" id="login-password" required>
+                    </div>
+                </div>
+                <p id="error-login" class="help is-danger"></p>
+                <button class="button is-primary is-fullwidth mt-4" type="submit">Ingresar</button>
+            </form>
+        </section>
+    </div>
+</div>
+<!-- ===== Modal: Registro ===== -->
+<div class="modal" id="modal-registro">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Crear Cuenta</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <form id="form-registro">
+                <div class="field">
+                    <label class="label">Email</label>
+                    <div class="control">
+                        <input class="input" type="email" id="reg-email" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Contraseña</label>
+                    <div class="control">
+                        <input class="input" type="password" id="reg-password" required>
+                    </div>
+                </div>
+                <p id="error-registro" class="help is-danger"></p>
+                <button class="button is-primary is-fullwidth mt-4" type="submit">Registrarme</button>
+            </form>
         </section>
     </div>
 </div>

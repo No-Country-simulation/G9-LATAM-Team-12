@@ -11,7 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
-
+import com.g9latam.team12.backend.repository.AnalisisHistorialRepository;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,6 +34,8 @@ class AnalisisEnergeticoControllerTest {
     private JsonMapper objectMapper;
 
     private String token;
+    @Autowired
+    private AnalisisHistorialRepository historialRepository;
 
     @BeforeEach
     void autenticar() throws Exception {
@@ -277,5 +280,52 @@ class AnalisisEnergeticoControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.costo_estimado_mensual").value(315.00));
+    }
+    @Test
+    void conGuardarTrue_persisteEnElHistorial() throws Exception {
+        long cantidadAntes = historialRepository.count();
+
+        String requestJson = """
+            {
+              "consumo_kwh": 300,
+              "uso_horario_pico": false,
+              "cantidad_equipos": 5,
+              "tipo_inmueble": "Depto",
+              "horas_alto_consumo": 4,
+              "guardar": true
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk());
+
+        assertThat(historialRepository.count()).isEqualTo(cantidadAntes + 1);
+    }
+
+    @Test
+    void conGuardarFalse_noPersisteNada() throws Exception {
+        long cantidadAntes = historialRepository.count();
+
+        String requestJson = """
+            {
+              "consumo_kwh": 300,
+              "uso_horario_pico": false,
+              "cantidad_equipos": 5,
+              "tipo_inmueble": "Depto",
+              "horas_alto_consumo": 4,
+              "guardar": false
+            }
+            """;
+
+        mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk());
+
+        assertThat(historialRepository.count()).isEqualTo(cantidadAntes);
     }
 }

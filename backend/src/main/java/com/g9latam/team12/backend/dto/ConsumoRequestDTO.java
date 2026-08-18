@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
+
 /**
  * DTO de entrada. Representa el JSON que envía el cliente
  * (frontend o Postman) hacia el endpoint:
@@ -55,6 +56,18 @@ public record ConsumoRequestDTO(
         @Min(value = 0, message = "Las horas de alto consumo no pueden ser negativas")
         @Max(value = 24, message = "Las horas de alto consumo no pueden superar 24")
         @JsonProperty("horas_alto_consumo")
-        Double horasAltoConsumo
+        Double horasAltoConsumo,
 
-) {}
+        @Schema(
+                description = "Si es true, persiste este análisis en el historial del usuario autenticado",
+                example = "false")
+        @JsonProperty("guardar")
+        Boolean guardar
+)
+{
+        public ConsumoRequestDTO {
+                if (guardar == null) {
+                        guardar = false;
+                }
+        }
+}

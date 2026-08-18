@@ -16,12 +16,27 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
         horas_alto_consumo: Number(document.getElementById('horasAltoConsumo').value)
     };
 
-    try {   // Hacemos la petición POST al backend.
+    try {
+        // Construir los headers con el Token si existe ---
+        const token = localStorage.getItem(TOKEN_KEY); // Usamos la constante definida abajo
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch('http://localhost:8080/analisis-energetico', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers, // Usamos los headers modificados
             body: JSON.stringify(datos)
         });
+
+        //Validar si no tiene permisos (Token expirado o no enviado) ---
+        if (response.status === 403 || response.status === 401) {
+            mostrarErrores({ detalles: ["Debes iniciar sesión para realizar un análisis"] });
+            abrirModal('modal-login'); // Le abrimos el modal automáticamente
+            return;
+        }
+
 
         let data;
         try {   // Intentamos leer el body de la respuesta como JSON.
@@ -228,4 +243,112 @@ aplicarTema(temaGuardado || (prefiereOscuro ? 'dark' : 'light'));
 botonTema?.addEventListener('click', () => {
     const temaActual = document.documentElement.getAttribute('data-theme');
     aplicarTema(temaActual === 'dark' ? 'light' : 'dark');
+});
+
+/* ===================== Lógica de Autenticación (JWT) ===================== */
+const URL_BACKEND = 'http://localhost:8080';
+const TOKEN_KEY = 'energiaI_token';
+const EMAIL_KEY = 'energiaI_email';
+
+function verificarAuthUI() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const email = localStorage.getItem(EMAIL_KEY);
+
+    const menuInvitado = document.getElementById('menu-invitado');
+    const itemsUsuario = document.querySelectorAll('.item-usuario'); // Selecciona todos los enlaces del usuario
+
+    if (token) {
+        // Ocultamos el menú de Login/Registro
+        if (menuInvitado) menuInvitado.classList.add('is-hidden');
+
+        // Mostramos todas las opciones del usuario
+        itemsUsuario.forEach(item => item.classList.remove('is-hidden'));
+
+        // Colocamos el email en la barra
+        const displayEmail = document.getElementById('user-email-display');
+        if (displayEmail) displayEmail.textContent = email;
+    } else {
+        // Mostramos el menú de Login/Registro
+        if (menuInvitado) menuInvitado.classList.remove('is-hidden');
+
+        // Ocultamos todas las opciones del usuario
+        itemsUsuario.forEach(item => item.classList.add('is-hidden'));
+    }
+}
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', verificarAuthUI);
+
+// Manejar Registro
+document.getElementById('form-registro')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const errorMsj = document.getElementById('error-registro');
+    errorMsj.textContent = '';
+
+    try {
+        const response = await fetch(`${URL_BACKEND}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            alert('Cuenta creada con éxito. Ahora puedes iniciar sesión.');
+            cerrarModal(document.getElementById('modal-registro'));
+            abrirModal('modal-login');
+        } else {
+            const data = await response.json();
+            // Verificamos si el backend envió una lista de errores de validación (detalles)
+            if (data.detalles && data.detalles.length > 0) {
+                // Extraemos los mensajes (ej: "La contraseña debe tener mínimo 8 caracteres")
+                errorMsj.innerHTML = data.detalles.map(d => d.mensaje || d).join('<br>');
+            } else {
+                errorMsj.textContent = data.mensaje || 'Error al registrar el usuario';
+            }
+        }
+    } catch (err) {
+        errorMsj.textContent = 'Error de conexión con el servidor';
+    }
+});
+
+// Manejar Login
+document.getElementById('form-login')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorMsj = document.getElementById('error-login');
+    errorMsj.textContent = '';
+
+    try {
+        const response = await fetch(`${URL_BACKEND}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Guardamos el token y el email en localStorage
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(EMAIL_KEY, data.email);
+
+            cerrarModal(document.getElementById('modal-login'));
+            verificarAuthUI();
+        } else {
+            errorMsj.textContent = 'Credenciales inválidas';
+        }
+    } catch (err) {
+        errorMsj.textContent = 'Error de conexión con el servidor';
+    }
+});
+
+// Manejar Cierre de sesión (Logout)
+document.getElementById('btn-logout')?.addEventListener('click', () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    verificarAuthUI();
+    // Limpiamos los resultados de análisis si cerramos sesión
+    document.getElementById('resultado').innerHTML = '';
+    if(graficoActual) graficoActual.destroy();
 });

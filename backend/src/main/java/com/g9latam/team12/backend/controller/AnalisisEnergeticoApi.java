@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Análisis Energético", description = "Endpoints para la evaluación de consumo eléctrico y predicción de eficiencia")
@@ -90,6 +91,6 @@ public interface AnalisisEnergeticoApi {
                     )
             )
     })
-    ResponseEntity<AnalisisResponseDTO> analizar(@Valid @RequestBody ConsumoRequestDTO request);
+    ResponseEntity<AnalisisResponseDTO> analizar(@Valid @RequestBody ConsumoRequestDTO request, Authentication authentication);
 
 }
