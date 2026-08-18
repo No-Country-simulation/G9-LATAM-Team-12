@@ -1,5 +1,6 @@
 package com.g9latam.team12.backend;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -7,6 +8,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -16,9 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Tests de integración del endpoint POST /analisis-energetico.
- *
- * Se activa el perfil "mock" para que Spring inyecte ModeloPredictorMock
- * y así los tests no dependan de que exista un modelo real cargado.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,7 +29,34 @@ class AnalisisEnergeticoControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private JsonMapper objectMapper;
 
+    private String token;
+
+    @BeforeEach
+    void autenticar() throws Exception {
+        String registerJson = """
+                {
+                  "email": "test-analisis@energiai.com",
+                  "password": "password123"
+                }
+                """;
+
+        // Ignoramos el resultado: si ya existe (409), no importa, solo necesitamos el login.
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerJson));
+
+        MvcResult loginResult = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerJson))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode json = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        token = json.get("token").asText();
+    }
 
     @Test
     void consumoAltoDevuelveCategoriaIneficiente() throws Exception {
@@ -43,6 +71,7 @@ class AnalisisEnergeticoControllerTest {
                 """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -64,6 +93,7 @@ class AnalisisEnergeticoControllerTest {
                 """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -83,6 +113,7 @@ class AnalisisEnergeticoControllerTest {
                 """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -102,11 +133,13 @@ class AnalisisEnergeticoControllerTest {
                 """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Error de validación"));
     }
+
     @Test
     void camposFaltantesDevuelveError400() throws Exception {
         String requestJson = """
@@ -116,6 +149,7 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
@@ -135,11 +169,13 @@ class AnalisisEnergeticoControllerTest {
                 """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Error de validación"));
     }
+
     @Test
     void cantidadEquiposEnCeroDevuelveError400() throws Exception {
         String requestJson = """
@@ -153,12 +189,14 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Error de validación"))
                 .andExpect(jsonPath("$.detalles[0].campo").value("cantidadEquipos"));
     }
+
     @Test
     void ineficienteConHorarioPicoSugierePeakShaving() throws Exception {
         String requestJson = """
@@ -172,6 +210,7 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -192,6 +231,7 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -212,10 +252,10 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                // acá deberían aparecer DOS recomendaciones: peak shaving + aislamiento
                 .andExpect(jsonPath("$.recomendaciones.length()").value(2));
     }
 
@@ -232,6 +272,7 @@ class AnalisisEnergeticoControllerTest {
             """;
 
         mockMvc.perform(post("/analisis-energetico")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())

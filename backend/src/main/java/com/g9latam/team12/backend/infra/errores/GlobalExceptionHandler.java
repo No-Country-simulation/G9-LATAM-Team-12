@@ -74,4 +74,25 @@ public class GlobalExceptionHandler {
             this(error.getField(), error.getDefaultMessage(), "CAMPO_INVALIDO");
         }
     }
+    @ExceptionHandler(EmailYaRegistradoException.class)
+    public ResponseEntity<ErrorRespuestaDTO> handleEmailYaRegistrado(EmailYaRegistradoException ex) {
+        var respuesta = new ErrorRespuestaDTO(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+    }
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ErrorRespuestaDTO> handleAuthenticationError(
+            org.springframework.security.core.AuthenticationException ex) {
+        var respuesta = new ErrorRespuestaDTO(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Credenciales inválidas",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(respuesta);
+    }
 }
