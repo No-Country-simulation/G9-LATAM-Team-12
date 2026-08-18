@@ -17,7 +17,7 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
     };
 
     try {   // Hacemos la petición POST al backend.
-        const response = await fetch('https://frugally-edge-flap.ngrok-free.dev', {
+        const response = await fetch('http://localhost:8080/analisis-energetico', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)

@@ -1,0 +1,95 @@
+:root {
+    --color-primario: #2e7d32;
+    --color-primario-hover: #1b5e20;
+    --color-error: #c62828;
+    --color-texto: #212121;
+    --color-fondo: #ffffff;
+    --color-fondo-resultado: #f9f9f9;
+    --color-borde: #dbdbdb;
+}
+
+[data-theme="dark"] {
+    --color-primario: #43a047;
+    --color-primario-hover: #66bb6a;
+    --color-error: #ef5350;
+    --color-texto: #f0f0f0;
+    --color-fondo: #121212;
+    --color-fondo-resultado: #1e1e1e;
+    --color-borde: #3a3a3a;
+}
+
+html, body {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Reforzamos el color primario de Bulma con nuestra propia paleta */
+.button.is-primary {
+    background-color: var(--color-primario);
+}
+.button.is-primary:hover {
+    background-color: var(--color-primario-hover);
+}
+
+.navbar.is-light {
+    background-color: var(--color-fondo);
+    border-bottom: 1px solid var(--color-borde);
+    min-height: 4.5rem;
+}
+.navbar-brand .navbar-item {
+    align-items: center;
+}
+.navbar.is-light .navbar-item,
+.navbar.is-light .navbar-link {
+    color: var(--color-texto);
+    background-color: transparent;
+}
+
+.box {
+    background-color: var(--color-fondo);
+    border: 1px solid var(--color-borde);
+}
+
+.modal-card-head,
+.modal-card-body,
+.modal-card-foot {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    border-color: var(--color-borde);
+}
+
+.error {
+    color: var(--color-error);
+    font-weight: bold;
+}
+
+.error-lista {
+    color: var(--color-error);
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+#resultado {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 6px;
+    background-color: var(--color-fondo-resultado);
+}
+
+#resultado ul {
+    padding-left: 1.2rem;
+}
+
+#grafico-probabilidad {
+    max-width: 100%;
+    margin-top: 1rem;
+}
+/* Corrección de fondo para el menú hamburguesa en móviles */
+@media screen and (max-width: 1023px) {
+    .navbar-menu {
+        background-color: var(--color-fondo);
+        border-bottom: 1px solid var(--color-borde);
+    }
+}
