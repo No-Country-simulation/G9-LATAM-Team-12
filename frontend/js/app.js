@@ -24,9 +24,9 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch('http://localhost:8080/analisis-energetico', {
+        const response = await fetch(`${URL_BACKEND}/analisis-energetico`, {
             method: 'POST',
-            headers: headers, // Usamos los headers modificados
+            headers: headers,
             body: JSON.stringify(datos)
         });
 
@@ -246,8 +246,7 @@ botonTema?.addEventListener('click', () => {
 });
 
 /* ===================== Lógica de Autenticación (JWT) ===================== */
-const URL_BACKEND = 'http://localhost:8080';
-const TOKEN_KEY = 'energiaI_token';
+const URL_BACKEND = `http://${window.location.hostname}:8080`;const TOKEN_KEY = 'energiaI_token';
 const EMAIL_KEY = 'energiaI_email';
 
 function verificarAuthUI() {

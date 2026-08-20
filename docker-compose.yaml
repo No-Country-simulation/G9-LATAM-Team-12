@@ -1,3 +1,4 @@
+GNU nano 4.8                                     docker-compose.yaml
 version: '3.3'
 
 services:
@@ -19,11 +20,14 @@ services:
       - "8080:8080"
     environment:
       - MODELO_API_URL=http://data-ml-app:8000/predict
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/energiai?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - SPRING_FLYWAY_URL=jdbc:mysql://mysql:3306/energiai?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_PROFILES_ACTIVE=mysql-oci,mock
+      - DB_HOST=10.0.0.140
+      - DB_PORT=3306
+      - DB_NAME=energiai
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       - data-ml-app
-      - mysql
     restart: always
 
   frontend-app:
@@ -36,25 +40,3 @@ services:
     depends_on:
       - backend-app
     restart: always
-
-  mysql:
-    image: mysql:8.4
-    container_name: energiai-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: energiai
-      MYSQL_USER: energiai_user
-      MYSQL_PASSWORD: energiai_pass
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-volumes:
-  mysql_data:
