@@ -30,6 +30,8 @@ EnergiAI es una solución inteligente desarrollada como parte del Hackathon para
 
 :heavy_check_mark: `Integración con OCI:` Utilización de Object Storage para almacenamiento de modelos o datos.
 
+:heavy_check_mark: `Modelo de Machine Learning:` Clasificación del perfil energético (Eficiente / Moderado / Ineficiente) mediante un modelo entrenado y servido como microservicio propio.
+
 ## Tecnologías utilizadas
 
 <div style="display: flex; align-items: center; gap: 8px;">
@@ -37,14 +39,35 @@ EnergiAI es una solución inteligente desarrollada como parte del Hackathon para
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" width="40" height="40" alt="Spring Boot 4.1.0"/>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/maven/maven-original.svg" width="40" height="40" alt="Maven"/>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg" width="40" height="40" alt="OCI"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="40" height="40" alt="Python"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" width="40" height="40" alt="HTML5"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="40" height="40" alt="CSS3"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="40" height="40" alt="JavaScript"/>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" width="40" height="40" alt="Docker"/>
 </div>
 
+
+**Backend**
 - **Java 21**
 - **Spring Boot 4.1.0** (Web, Validation)
 - **Lombok** para generar automáticamente getters, setters y constructores
 - **SpringDoc OpenAPI** (Swagger UI) para documentación de la API
+- **RestTemplate** para la comunicación con el servicio de Machine Learning
 - **OCI Object Storage** para almacenamiento de modelos o datos
 - **Maven** como gestor de dependencias
+
+**Servicio de Modelo (ML)**
+- **Python**
+- **joblib** para la carga del modelo entrenado
+- **scikit-learn** (entrenamiento del modelo de clasificación)
+- Documentación OpenAPI propia (`openapi.json`)
+
+**Frontend**
+- **HTML5 / CSS3 / JavaScript**
+
+**Infraestructura**
+- **Docker** y **Docker Compose** para levantar los tres servicios en conjunto
+
 
 ## Estructura del proyecto
 
