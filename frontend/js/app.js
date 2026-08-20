@@ -246,7 +246,7 @@ botonTema?.addEventListener('click', () => {
 });
 
 /* ===================== Lógica de Autenticación (JWT) ===================== */
-const URL_BACKEND = `http://${window.location.hostname}:8080`;const TOKEN_KEY = 'energiaI_token';
+const URL_BACKEND = `${window.location.origin}/api`;
 const EMAIL_KEY = 'energiaI_email';
 
 function verificarAuthUI() {
