@@ -25,6 +25,8 @@ services:
       - DB_NAME=energiai
       - DB_USERNAME=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JAVA_TOOL_OPTIONS=-Xmx350m -Xms128m
     depends_on:
       - data-ml-app
     restart: always
