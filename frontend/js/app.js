@@ -175,8 +175,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /* ===================== Modales (histórico / usuarios / csv) ===================== */
-function abrirModal(id) {
+async function abrirModal(id) {
     document.getElementById(id)?.classList.add('is-active');
+    if (id === 'modal-historico') {
+        await cargarHistorial();
+    }
+}
+
+async function cargarHistorial() {
+    const contenedor = document.querySelector('#modal-historico .modal-card-body');
+    contenedor.innerHTML = '<p>Cargando...</p>';
+
+    const token = localStorage.getItem(TOKEN_KEY);
+    const response = await fetch(`${URL_BACKEND}/historial`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        contenedor.innerHTML = '<p class="error">No se pudo cargar el histórico.</p>';
+        return;
+    }
+
+    const data = await response.json();
+    if (data.analisis.length === 0) {
+        contenedor.innerHTML = '<p class="has-text-grey">Todavía no guardaste ningún análisis.</p>';
+        return;
+    }
+
+    const filas = data.analisis.map(a => `
+        <tr>
+            <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
+            <td>${a.consumoKwh} kWh</td>
+            <td>${a.categoria}</td>
+            <td>R$ ${a.costoEstimadoMensual.toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    contenedor.innerHTML = `
+        <p><strong>Promedio mensual:</strong> R$ ${data.resumen.promedioCostoMensual.toFixed(2)}
+           | <strong>Tendencia:</strong> ${data.resumen.tendencia}</p>
+        <table class="table is-fullwidth is-striped">
+            <thead><tr><th>Fecha</th><th>Consumo</th><th>Categoría</th><th>Costo</th></tr></thead>
+            <tbody>${filas}</tbody>
+        </table>
+    `;
 }
 function cerrarModal(modal) {
     modal.classList.remove('is-active');
@@ -352,3 +394,54 @@ document.getElementById('btn-logout')?.addEventListener('click', () => {
     document.getElementById('resultado').innerHTML = '';
     if(graficoActual) graficoActual.destroy();
 });
+
+let ultimoAnalisis = null; // se llena en el submit, antes de mostrarResultado
+
+// dentro del listener de 'form-consumo', después de mostrarResultado(data):
+ultimoAnalisis = {
+    consumoKwh: datos.consumo_kwh,
+    categoria: data.categoria,
+    probabilidad: data.probabilidad,
+    costoEstimadoMensual: data.costo_estimado_mensual
+};
+
+function mostrarResultado(data) {
+    const listaRecomendaciones = data.recomendaciones.map(r => `<li>${r}</li>`).join('');
+
+    document.getElementById('resultado').innerHTML = `
+        <h3 class="title is-5">Categoría: ${data.categoria}</h3>
+        <p>Probabilidad: ${(data.probabilidad * 100).toFixed(0)}%</p>
+        <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
+        <h4 class="title is-6 mt-3">Recomendaciones:</h4>
+        <ul>${listaRecomendaciones}</ul>
+        <button class="button is-link is-fullwidth mt-3" id="btn-guardar-historial">Guardar este análisis</button>
+    `;
+
+    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
+    dibujarGrafico(data);
+}
+
+async function guardarEnHistorial() {
+    const boton = document.getElementById('btn-guardar-historial');
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const response = await fetch(`${URL_BACKEND}/historial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(ultimoAnalisis)
+        });
+
+        if (response.ok) {
+            boton.textContent = '✓ Guardado';
+        } else {
+            boton.disabled = false;
+            boton.textContent = 'Error al guardar — reintentar';
+        }
+    } catch {
+        boton.disabled = false;
+        boton.textContent = 'Error de conexión — reintentar';
+    }
+}

@@ -2,6 +2,7 @@ package com.g9latam.team12.backend.service;
 
 import com.g9latam.team12.backend.dto.AnalisisResponseDTO;
 import com.g9latam.team12.backend.dto.ConsumoRequestDTO;
+import com.g9latam.team12.backend.dto.GuardarHistorialRequestDTO;
 import com.g9latam.team12.backend.model.AnalisisHistorial;
 import com.g9latam.team12.backend.model.Usuario;
 import com.g9latam.team12.backend.repository.AnalisisHistorialRepository;
@@ -26,6 +27,18 @@ public class AnalisisHistorialService {
         historial.setCategoria(response.categoria());
         historial.setProbabilidad(response.probabilidad());
         historial.setCostoEstimadoMensual(BigDecimal.valueOf(response.costoEstimadoMensual()));
+        historial.setFecha(LocalDateTime.now());
+
+        historialRepository.save(historial);
+    }
+
+    public void guardar(Usuario usuario, GuardarHistorialRequestDTO request) {
+        AnalisisHistorial historial = new AnalisisHistorial();
+        historial.setUsuario(usuario);
+        historial.setConsumoKwh(request.consumoKwh());
+        historial.setCategoria(request.categoria());
+        historial.setProbabilidad(request.probabilidad());
+        historial.setCostoEstimadoMensual(BigDecimal.valueOf(request.costoEstimadoMensual()));
         historial.setFecha(LocalDateTime.now());
 
         historialRepository.save(historial);
