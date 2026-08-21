@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/analisis-energetico")
-@CrossOrigin(origins = {"http://localhost", "http://127.0.0.1:5500"})@Tag(name = "Análisis Energético", description = "Endpoints para la evaluación de consumo eléctrico y predicción de eficiencia")
+@CrossOrigin(origins = {"http://localhost", "http://127.0.0.1:5500","http://129.213.55.108:8080"}/)@Tag(name = "Análisis Energético", description = "Endpoints para la evaluación de consumo eléctrico y predicción de eficiencia")
 public class AnalisisEnergeticoController implements AnalisisEnergeticoApi {
 
     private final ModeloPredictor modeloPredictor;
