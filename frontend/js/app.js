@@ -55,10 +55,10 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
         mostrarResultado(data);
 
         ultimoAnalisis = {
-            consumoKwh: datos.consumo_kwh,
+            consumo_kwh: datos.consumo_kwh,
             categoria: data.categoria,
             probabilidad: data.probabilidad,
-            costoEstimadoMensual: data.costo_estimado_mensual
+            costo_estimado_mensual: data.costo_estimado_mensual
         };
 
     } catch (error) {   // Este catch atrapa errores de red
@@ -215,14 +215,14 @@ async function cargarHistorial() {
     const filas = data.analisis.map(a => `
         <tr>
             <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
-            <td>${a.consumoKwh} kWh</td>
+            <td>${a.consumo_kwh} kWh</td>
             <td>${a.categoria}</td>
-            <td>R$ ${a.costoEstimadoMensual.toFixed(2)}</td>
+            <td>R$ ${a.costo_estimado_mensual.toFixed(2)}</td>
         </tr>
     `).join('');
 
     contenedor.innerHTML = `
-        <p><strong>Promedio mensual:</strong> R$ ${data.resumen.promedioCostoMensual.toFixed(2)}
+        <p><strong>Promedio mensual:</strong> R$ ${data.resumen.promedio_costo_mensual.toFixed(2)}
            | <strong>Tendencia:</strong> ${data.resumen.tendencia}</p>
         <table class="table is-fullwidth is-striped">
             <thead><tr><th>Fecha</th><th>Consumo</th><th>Categoría</th><th>Costo</th></tr></thead>
