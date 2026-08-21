@@ -10,7 +10,7 @@ COPY mvnw .
 RUN chmod +x mvnw
 
 # Descarga librerías (SDK, OCI y Spring)
-RUN ./mvnw dependency:go-offline -B
+# RUN ./mvnw dependency:go-offline -B
 
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
