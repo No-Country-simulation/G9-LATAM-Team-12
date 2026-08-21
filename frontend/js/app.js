@@ -54,6 +54,13 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
         mostrarResultado(data);
 
+        ultimoAnalisis = {
+            consumoKwh: datos.consumo_kwh,
+            categoria: data.categoria,
+            probabilidad: data.probabilidad,
+            costoEstimadoMensual: data.costo_estimado_mensual
+        };
+
     } catch (error) {   // Este catch atrapa errores de red
         console.error('Error de conexión:', error);
         mostrarErrorConexion();
@@ -65,6 +72,7 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
 
 let graficoActual = null;   // guardamos referencia para poder destruirlo y evitar duplicados
+let ultimoAnalisis = null;  // guarda el último análisis mostrado, para poder guardarlo en el histórico
 
 //  caso feliz, HTTP 200
 function mostrarResultado(data) {
@@ -79,8 +87,10 @@ function mostrarResultado(data) {
         <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
         <h4 class="title is-6 mt-3">Recomendaciones:</h4>
         <ul>${listaRecomendaciones}</ul>
+        <button class="button is-link is-fullwidth mt-3" id="btn-guardar-historial">Guardar este análisis</button>
     `;
 
+    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
     dibujarGrafico(data);
 }
 
@@ -394,32 +404,6 @@ document.getElementById('btn-logout')?.addEventListener('click', () => {
     document.getElementById('resultado').innerHTML = '';
     if(graficoActual) graficoActual.destroy();
 });
-
-let ultimoAnalisis = null; // se llena en el submit, antes de mostrarResultado
-
-// dentro del listener de 'form-consumo', después de mostrarResultado(data):
-ultimoAnalisis = {
-    consumoKwh: datos.consumo_kwh,
-    categoria: data.categoria,
-    probabilidad: data.probabilidad,
-    costoEstimadoMensual: data.costo_estimado_mensual
-};
-
-function mostrarResultado(data) {
-    const listaRecomendaciones = data.recomendaciones.map(r => `<li>${r}</li>`).join('');
-
-    document.getElementById('resultado').innerHTML = `
-        <h3 class="title is-5">Categoría: ${data.categoria}</h3>
-        <p>Probabilidad: ${(data.probabilidad * 100).toFixed(0)}%</p>
-        <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
-        <h4 class="title is-6 mt-3">Recomendaciones:</h4>
-        <ul>${listaRecomendaciones}</ul>
-        <button class="button is-link is-fullwidth mt-3" id="btn-guardar-historial">Guardar este análisis</button>
-    `;
-
-    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
-    dibujarGrafico(data);
-}
 
 async function guardarEnHistorial() {
     const boton = document.getElementById('btn-guardar-historial');
