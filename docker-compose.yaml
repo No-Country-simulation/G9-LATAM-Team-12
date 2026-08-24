@@ -15,7 +15,7 @@ services:
     container_name: backend-app
     environment:
       - MODELO_API_URL=http://data-ml-app:8000/predict
-      - SPRING_PROFILES_ACTIVE=mysql-oci,mock
+      - SPRING_PROFILES_ACTIVE=mysql-oci,http
       - DB_HOST=10.0.0.140
       - DB_PORT=3306
       - DB_NAME=energiai
