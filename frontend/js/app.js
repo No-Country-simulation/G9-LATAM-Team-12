@@ -18,7 +18,7 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
     try {   // Hacemos la petición POST al backend.
      
-      const response = await fetch('http://129.213.55.108:8080/analisis-energetico', {
+      const response = await fetch('http://150.136.167.160:8080/analisis-energetico', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
