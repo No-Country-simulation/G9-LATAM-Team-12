@@ -6,8 +6,6 @@ services:
       context: ./data/Modelo Machine
       dockerfile: Dockerfile
     container_name: data-ml-app
-    ports:
-      - "8000:8000"
     restart: always
 
   backend-app:
@@ -15,10 +13,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend-app
-    ports:
-      - "8080:8080"
     environment:
       - MODELO_API_URL=http://data-ml-app:8000/predict
+      - SPRING_PROFILES_ACTIVE=mysql-oci,mock
+      - DB_HOST=10.0.0.140
+      - DB_PORT=3306
+      - DB_NAME=energiai
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JAVA_TOOL_OPTIONS=-Xmx350m -Xms128m
     depends_on:
       - data-ml-app
     restart: always
@@ -28,8 +32,33 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend-app
-    ports:
-      - "80:80"
     depends_on:
       - backend-app
     restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - frontend-app
+      - backend-app
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  certbot-etc:
+  certbot-www:

@@ -16,13 +16,27 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
         horas_alto_consumo: Number(document.getElementById('horasAltoConsumo').value)
     };
 
-    try {   // Hacemos la petición POST al backend.
-     
-  const response = await fetch('/analisis-energetico', {
+    try {
+        // Construir los headers con el Token si existe ---
+        const token = localStorage.getItem(TOKEN_KEY); // Usamos la constante definida abajo
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${URL_BACKEND}/analisis-energetico`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(datos)
         });
+
+        //Validar si no tiene permisos (Token expirado o no enviado) ---
+        if (response.status === 403 || response.status === 401) {
+            mostrarErrores({ detalles: ["Debes iniciar sesión para realizar un análisis"] });
+            abrirModal('modal-login'); // Le abrimos el modal automáticamente
+            return;
+        }
+
 
         let data;
         try {   // Intentamos leer el body de la respuesta como JSON.
@@ -40,6 +54,13 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
         mostrarResultado(data);
 
+        ultimoAnalisis = {
+            consumo_kwh: datos.consumo_kwh,
+            categoria: data.categoria,
+            probabilidad: data.probabilidad,
+            costo_estimado_mensual: data.costo_estimado_mensual
+        };
+
     } catch (error) {   // Este catch atrapa errores de red
         console.error('Error de conexión:', error);
         mostrarErrorConexion();
@@ -51,6 +72,7 @@ document.getElementById('form-consumo').addEventListener('submit', async (e) => 
 
 
 let graficoActual = null;   // guardamos referencia para poder destruirlo y evitar duplicados
+let ultimoAnalisis = null;  // guarda el último análisis mostrado, para poder guardarlo en el histórico
 
 //  caso feliz, HTTP 200
 function mostrarResultado(data) {
@@ -65,8 +87,10 @@ function mostrarResultado(data) {
         <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
         <h4 class="title is-6 mt-3">Recomendaciones:</h4>
         <ul>${listaRecomendaciones}</ul>
+        <button class="button is-link is-fullwidth mt-3" id="btn-guardar-historial">Guardar este análisis</button>
     `;
 
+    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
     dibujarGrafico(data);
 }
 
@@ -161,8 +185,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /* ===================== Modales (histórico / usuarios / csv) ===================== */
-function abrirModal(id) {
+async function abrirModal(id) {
     document.getElementById(id)?.classList.add('is-active');
+    if (id === 'modal-historico') {
+        await cargarHistorial();
+    }
+}
+
+async function cargarHistorial() {
+    const contenedor = document.querySelector('#modal-historico .modal-card-body');
+    contenedor.innerHTML = '<p>Cargando...</p>';
+
+    const token = localStorage.getItem(TOKEN_KEY);
+    const response = await fetch(`${URL_BACKEND}/historial`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        contenedor.innerHTML = '<p class="error">No se pudo cargar el histórico.</p>';
+        return;
+    }
+
+    const data = await response.json();
+    if (data.analisis.length === 0) {
+        contenedor.innerHTML = '<p class="has-text-grey">Todavía no guardaste ningún análisis.</p>';
+        return;
+    }
+
+    const filas = data.analisis.map(a => `
+        <tr>
+            <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
+            <td>${a.consumo_kwh} kWh</td>
+            <td>${a.categoria}</td>
+            <td>R$ ${a.costo_estimado_mensual.toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    contenedor.innerHTML = `
+        <p><strong>Promedio mensual:</strong> R$ ${data.resumen.promedio_costo_mensual.toFixed(2)}
+           | <strong>Tendencia:</strong> ${data.resumen.tendencia}</p>
+        <table class="table is-fullwidth is-striped">
+            <thead><tr><th>Fecha</th><th>Consumo</th><th>Categoría</th><th>Costo</th></tr></thead>
+            <tbody>${filas}</tbody>
+        </table>
+    `;
 }
 function cerrarModal(modal) {
     modal.classList.remove('is-active');
@@ -230,3 +296,186 @@ botonTema?.addEventListener('click', () => {
     const temaActual = document.documentElement.getAttribute('data-theme');
     aplicarTema(temaActual === 'dark' ? 'light' : 'dark');
 });
+
+/* ===================== Lógica de Autenticación (JWT) ===================== */
+const URL_BACKEND = `${window.location.origin}/api`;
+const TOKEN_KEY = 'energiaI_token';
+const EMAIL_KEY = 'energiaI_email';
+
+function verificarAuthUI() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const email = localStorage.getItem(EMAIL_KEY);
+
+    const menuInvitado = document.getElementById('menu-invitado');
+    const itemsUsuario = document.querySelectorAll('.item-usuario'); // Selecciona todos los enlaces del usuario
+
+    if (token) {
+        // Ocultamos el menú de Login/Registro
+        if (menuInvitado) menuInvitado.classList.add('is-hidden');
+
+        // Mostramos todas las opciones del usuario
+        itemsUsuario.forEach(item => item.classList.remove('is-hidden'));
+
+        // Colocamos el email en la barra
+        const displayEmail = document.getElementById('user-email-display');
+        if (displayEmail) displayEmail.textContent = email;
+    } else {
+        // Mostramos el menú de Login/Registro
+        if (menuInvitado) menuInvitado.classList.remove('is-hidden');
+
+        // Ocultamos todas las opciones del usuario
+        itemsUsuario.forEach(item => item.classList.add('is-hidden'));
+    }
+}
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', verificarAuthUI);
+
+// Manejar Registro
+document.getElementById('form-registro')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const errorMsj = document.getElementById('error-registro');
+    errorMsj.textContent = '';
+
+    try {
+        const response = await fetch(`${URL_BACKEND}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            alert('Cuenta creada con éxito. Ahora puedes iniciar sesión.');
+            cerrarModal(document.getElementById('modal-registro'));
+            abrirModal('modal-login');
+        } else {
+            const data = await response.json();
+            // Verificamos si el backend envió una lista de errores de validación (detalles)
+            if (data.detalles && data.detalles.length > 0) {
+                // Extraemos los mensajes (ej: "La contraseña debe tener mínimo 8 caracteres")
+                errorMsj.innerHTML = data.detalles.map(d => d.mensaje || d).join('<br>');
+            } else {
+                errorMsj.textContent = data.mensaje || 'Error al registrar el usuario';
+            }
+        }
+    } catch (err) {
+        errorMsj.textContent = 'Error de conexión con el servidor';
+    }
+});
+
+// Manejar Login
+document.getElementById('form-login')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorMsj = document.getElementById('error-login');
+    errorMsj.textContent = '';
+
+    try {
+        const response = await fetch(`${URL_BACKEND}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Guardamos el token y el email en localStorage
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(EMAIL_KEY, data.email);
+
+            cerrarModal(document.getElementById('modal-login'));
+            verificarAuthUI();
+        } else {
+            errorMsj.textContent = 'Credenciales inválidas';
+        }
+    } catch (err) {
+        errorMsj.textContent = 'Error de conexión con el servidor';
+    }
+});
+
+// Manejar Cierre de sesión (Logout)
+document.getElementById('btn-logout')?.addEventListener('click', () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    verificarAuthUI();
+    // Limpiamos los resultados de análisis si cerramos sesión
+    document.getElementById('resultado').innerHTML = '';
+    if(graficoActual) graficoActual.destroy();
+});
+
+async function guardarEnHistorial() {
+    const boton = document.getElementById('btn-guardar-historial');
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const response = await fetch(`${URL_BACKEND}/historial`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(ultimoAnalisis)
+        });
+
+        if (response.ok) {
+            boton.textContent = '✓ Guardado';
+        } else {
+            boton.disabled = false;
+            boton.textContent = 'Error al guardar — reintentar';
+        }
+    } catch {
+        boton.disabled = false;
+        boton.textContent = 'Error de conexión — reintentar';
+    }
+}
+
+btnConfirmarCsv?.addEventListener('click', async () => {
+    const archivo = inputCsv.files[0];
+    if (!archivo) return;
+
+    const textoOriginal = btnConfirmarCsv.textContent;
+    btnConfirmarCsv.disabled = true;
+    btnConfirmarCsv.textContent = 'Importando...';
+
+    const resultadoDiv = document.getElementById('resultado-csv') || crearContenedorResultadoCsv();
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const formData = new FormData();
+        formData.append('file', archivo);
+
+        const response = await fetch(`${URL_BACKEND}/historial/importar`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }, // sin Content-Type: el browser lo arma con el boundary
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            resultadoDiv.innerHTML = `<p class="error">Error al importar el archivo.</p>`;
+            return;
+        }
+
+        const listaErrores = data.errores.map(e => `<li>Fila ${e.fila}: ${e.motivo}</li>`).join('');
+        resultadoDiv.innerHTML = `
+            <p><strong>${data.filas_exitosas}</strong> de <strong>${data.filas_procesadas}</strong> filas importadas correctamente.</p>
+            ${data.filas_con_error > 0 ? `<p class="has-text-danger">${data.filas_con_error} filas con error:</p><ul>${listaErrores}</ul>` : ''}
+        `;
+
+    } catch (error) {
+        resultadoDiv.innerHTML = `<p class="error">No se pudo conectar con el servidor.</p>`;
+    } finally {
+        btnConfirmarCsv.disabled = false;
+        btnConfirmarCsv.textContent = textoOriginal;
+    }
+});
+
+function crearContenedorResultadoCsv() {
+    const div = document.createElement('div');
+    div.id = 'resultado-csv';
+    div.className = 'mt-3';
+    btnConfirmarCsv.insertAdjacentElement('afterend', div);
+    return div;
+}
