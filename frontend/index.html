@@ -13,7 +13,7 @@
 <nav class="navbar is-light" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item is-size-4 has-text-weight-bold" href="#" id="nav-inicio">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="78" height="78" style="margin-right: 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="78" height="78" style="margin-right: 10px;max-height: none;">
                 <style>
                     .glow { fill: #FFEB3B; opacity: 0; transition: opacity 0.3s ease; }
                     .glass { fill: #CFD8DC; stroke: #607D8B; stroke-width: 2; transition: fill 0.3s ease, stroke 0.3s ease; }
@@ -34,18 +34,26 @@
                     </filter>
                 </defs>
 
+                <!-- 1. El tallo (se dibuja primero, queda al fondo) -->
+                <line class="stem" x1="50" y1="88" x2="50" y2="65" />
+
+                <!-- 2. Hojas desplazadas hacia abajo (para acercarlas a la base) -->
+                <path class="leaf" d="M50 86 C39 83 33 75 30 66 C43 68 50 75 50 86 Z" />
+                <path class="leaf" d="M50 80 C61 77 67 70 70 63 C58 65 50 70 50 80 Z" />
+
+                <!-- 3. La tierra (se dibuja DESPUÉS para que quede SUPERPUESTA a las hojas y el tallo) -->
                 <path class="soil" d="M28 96 Q34 88 42 95 Q50 87 58 95 Q66 88 72 96 Z" />
-                <line class="stem" x1="50" y1="88" x2="50" y2="58" />
-                <path class="leaf" d="M50 78 C34 74 26 62 22 50 C40 52 50 62 50 78 Z" />
-                <path class="leaf" d="M50 70 C66 66 74 56 78 46 C62 48 50 56 50 70 Z" />
 
-                <circle class="glow" cx="50" cy="32" r="20" filter="url(#glow-filter)" />
-                <circle class="glass" cx="50" cy="32" r="16" />
-                <path class="filament" d="M43 26 C43 22 47 22 47 26 C47 30 53 30 53 26 C53 22 57 22 57 26" transform="translate(0,4)" />
+                <!-- 4. Bombilla / Pimpollo (aumentados un 30% como antes) -->
+                <circle class="glow" cx="50" cy="32" r="26" filter="url(#glow-filter)" />
+                <circle class="glass" cx="50" cy="32" r="20.8" />
 
-                <rect class="base" x="44" y="46" width="12" height="4" rx="1" />
-                <rect class="base" x="44" y="50" width="12" height="4" rx="1" />
-                <rect class="cap" x="45" y="54" width="10" height="5" rx="1" />
+                <path class="filament" d="M41 26 C41 21 46 21 46 26 C46 31 54 31 54 26 C54 21 59 21 59 26" transform="translate(0,4)" />
+
+                <!-- Rosca reacomodada -->
+                <rect class="base" x="42" y="51" width="16" height="5.2" rx="1.5" />
+                <rect class="base" x="42" y="56.2" width="16" height="5.2" rx="1.5" />
+                <rect class="cap" x="43.5" y="61.4" width="13" height="6.5" rx="1.5" />
             </svg>
             EnergiAI
         </a>
