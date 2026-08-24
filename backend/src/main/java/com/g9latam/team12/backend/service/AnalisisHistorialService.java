@@ -20,22 +20,22 @@ public class AnalisisHistorialService {
         this.historialRepository = historialRepository;
     }
 
-    public void guardar(Usuario usuario, ConsumoRequestDTO request, AnalisisResponseDTO response) {
+
+    public void guardar(Usuario usuario, ConsumoRequestDTO request, AnalisisResponseDTO response, LocalDateTime fecha) {
         AnalisisHistorial historial = new AnalisisHistorial();
         historial.setUsuario(usuario);
         historial.setConsumoKwh(request.consumoKwh().intValue());
         historial.setCategoria(response.categoria());
         historial.setProbabilidad(response.probabilidad());
         historial.setCostoEstimadoMensual(BigDecimal.valueOf(response.costoEstimadoMensual()));
-        historial.setFecha(LocalDateTime.now());
+        historial.setFecha(fecha != null ? fecha : LocalDateTime.now());
 
         historialRepository.save(historial);
     }
-
     public void guardar(Usuario usuario, GuardarHistorialRequestDTO request) {
         AnalisisHistorial historial = new AnalisisHistorial();
         historial.setUsuario(usuario);
-        historial.setConsumoKwh(request.consumoKwh());
+        historial.setConsumoKwh(request.consumoKwh().intValue()); // Asumo que es un Number/Double, si es Integer borrale el .intValue()
         historial.setCategoria(request.categoria());
         historial.setProbabilidad(request.probabilidad());
         historial.setCostoEstimadoMensual(BigDecimal.valueOf(request.costoEstimadoMensual()));
@@ -43,4 +43,10 @@ public class AnalisisHistorialService {
 
         historialRepository.save(historial);
     }
+
+
+    public void guardar(Usuario usuario, ConsumoRequestDTO request, AnalisisResponseDTO response) {
+        guardar(usuario, request, response, LocalDateTime.now());
+    }
+
 }

@@ -429,3 +429,53 @@ async function guardarEnHistorial() {
         boton.textContent = 'Error de conexión — reintentar';
     }
 }
+
+btnConfirmarCsv?.addEventListener('click', async () => {
+    const archivo = inputCsv.files[0];
+    if (!archivo) return;
+
+    const textoOriginal = btnConfirmarCsv.textContent;
+    btnConfirmarCsv.disabled = true;
+    btnConfirmarCsv.textContent = 'Importando...';
+
+    const resultadoDiv = document.getElementById('resultado-csv') || crearContenedorResultadoCsv();
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const formData = new FormData();
+        formData.append('file', archivo);
+
+        const response = await fetch(`${URL_BACKEND}/historial/importar`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }, // sin Content-Type: el browser lo arma con el boundary
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            resultadoDiv.innerHTML = `<p class="error">Error al importar el archivo.</p>`;
+            return;
+        }
+
+        const listaErrores = data.errores.map(e => `<li>Fila ${e.fila}: ${e.motivo}</li>`).join('');
+        resultadoDiv.innerHTML = `
+            <p><strong>${data.filas_exitosas}</strong> de <strong>${data.filas_procesadas}</strong> filas importadas correctamente.</p>
+            ${data.filas_con_error > 0 ? `<p class="has-text-danger">${data.filas_con_error} filas con error:</p><ul>${listaErrores}</ul>` : ''}
+        `;
+
+    } catch (error) {
+        resultadoDiv.innerHTML = `<p class="error">No se pudo conectar con el servidor.</p>`;
+    } finally {
+        btnConfirmarCsv.disabled = false;
+        btnConfirmarCsv.textContent = textoOriginal;
+    }
+});
+
+function crearContenedorResultadoCsv() {
+    const div = document.createElement('div');
+    div.id = 'resultado-csv';
+    div.className = 'mt-3';
+    btnConfirmarCsv.insertAdjacentElement('afterend', div);
+    return div;
+}
