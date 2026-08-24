@@ -34,23 +34,23 @@
                     </filter>
                 </defs>
 
-                <!-- 1. El tallo (se dibuja primero, queda al fondo) -->
+                <!-- 1. El tallo  -->
                 <line class="stem" x1="50" y1="88" x2="50" y2="65" />
 
-                <!-- 2. Hojas desplazadas hacia abajo (para acercarlas a la base) -->
+                <!-- 2. Hojas  -->
                 <path class="leaf" d="M50 86 C39 83 33 75 30 66 C43 68 50 75 50 86 Z" />
                 <path class="leaf" d="M50 80 C61 77 67 70 70 63 C58 65 50 70 50 80 Z" />
 
-                <!-- 3. La tierra (se dibuja DESPUÉS para que quede SUPERPUESTA a las hojas y el tallo) -->
+                <!-- 3. La tierra  -->
                 <path class="soil" d="M28 96 Q34 88 42 95 Q50 87 58 95 Q66 88 72 96 Z" />
 
-                <!-- 4. Bombilla / Pimpollo (aumentados un 30% como antes) -->
+                <!-- 4. Bombilla  -->
                 <circle class="glow" cx="50" cy="32" r="26" filter="url(#glow-filter)" />
                 <circle class="glass" cx="50" cy="32" r="20.8" />
 
                 <path class="filament" d="M41 26 C41 21 46 21 46 26 C46 31 54 31 54 26 C54 21 59 21 59 26" transform="translate(0,4)" />
 
-                <!-- Rosca reacomodada -->
+                <!-- Rosca -->
                 <rect class="base" x="42" y="51" width="16" height="5.2" rx="1.5" />
                 <rect class="base" x="42" y="56.2" width="16" height="5.2" rx="1.5" />
                 <rect class="cap" x="43.5" y="61.4" width="13" height="6.5" rx="1.5" />
@@ -62,7 +62,7 @@
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span> <!-- Este 4to span es obligatorio en Bulma 1.0+ -->
+            <span aria-hidden="true"></span>
         </a>
     </div>
 
