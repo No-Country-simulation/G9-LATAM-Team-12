@@ -268,9 +268,17 @@
                     </label>
                 </div>
             </div>
-            <p class="help">
-                La carga todavía no está conectada a un endpoint del backend; falta definir el contrato (por ejemplo, <code>POST /analisis-energetico/importar</code>).
-            </p>
+            <div class="help">
+                <p class="mb-2">El archivo CSV debe incluir las siguientes columnas:</p>
+                <div class="tags">
+                    <span class="tag is-dark">fecha</span>
+                    <span class="tag is-dark">consumo_kwh</span>
+                    <span class="tag is-dark">uso_horario_pico</span>
+                    <span class="tag is-dark">cantidad_equipos</span>
+                    <span class="tag is-dark">tipo_inmueble</span>
+                    <span class="tag is-dark">horas_alto_consumo</span>
+                </div>
+            </div>
         </section>
         <footer class="modal-card-foot">
             <button class="button is-primary" id="btn-confirmar-csv" disabled>Subir</button>
