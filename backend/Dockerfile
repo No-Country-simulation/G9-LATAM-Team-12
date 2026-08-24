@@ -13,7 +13,9 @@ RUN chmod +x mvnw
 # RUN ./mvnw dependency:go-offline -B
 
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+# RUN ./mvnw clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2/repository \
+    ./mvnw clean package -DskipTests
 
 # Etapa de ejecución
 FROM eclipse-temurin:21-jre-alpine
