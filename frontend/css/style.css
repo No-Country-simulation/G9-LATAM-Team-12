@@ -108,3 +108,49 @@ svg.gauge { width: 230px; flex-shrink: 0; }
         justify-content: center;
     }
 }
+/* --- LAB ANIMATIONS --- */
+/* Alpha: OCR Scanner */
+.ocr-scanner {
+    position: absolute;
+    width: 90px;
+    height: 3px;
+    background-color: #00d1b2;
+    box-shadow: 0 0 10px #00d1b2;
+    top: 25px;
+    left: 15px;
+    opacity: 0;
+}
+.ocr-scanner.scanning {
+    animation: scan 1.8s ease-in-out;
+}
+@keyframes scan {
+    0% { top: 25px; opacity: 1; }
+    50% { top: 125px; opacity: 1; }
+    100% { top: 25px; opacity: 0; }
+}
+
+/* Beta: Solar */
+.solar-sun {
+    transform-origin: 30px 30px;
+    animation: sun-pulse 3s ease-in-out infinite alternate;
+}
+@keyframes sun-pulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 221, 87, 0.5)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 15px rgba(255, 221, 87, 1)); }
+}
+
+/* Beta: IoT */
+.iot-flow {
+    stroke-dasharray: 6;
+    animation: dash-flow 1s linear infinite;
+}
+
+/* Future: ML Predictive */
+.future path {
+    animation: dash-flow 2s linear infinite;
+}
+
+@keyframes dash-flow {
+    from { stroke-dashoffset: 24; }
+    to { stroke-dashoffset: 0; }
+}
