@@ -1,301 +1,438 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EnergiAI</title>
+    <title>EnergiAI — Inteligencia para el Consumo Energético</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        html{scroll-behavior:smooth;}
+        .display{font-family:'Big Shoulders Display', sans-serif; text-transform:uppercase; letter-spacing:0.01em;}
+        .mono{font-family:'IBM Plex Mono', monospace;}
+
+        /* Hero specific */
+        .eyebrow {
+            display:inline-flex; align-items:center; gap:8px;
+            font-family:'IBM Plex Mono'; font-size:12px; color:var(--color-primario-bright);
+            border:1px solid var(--bulma-border); background:var(--bulma-scheme-main-bis);
+            padding:6px 12px; border-radius:100px; margin-bottom:22px;
+        }
+        .eyebrow .dot { width:6px; height:6px; border-radius:50%; background:var(--color-primario); animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+        .hero-stats { display:flex; gap:26px; margin-top:36px; flex-wrap:wrap; }
+        .hero-stats .stat { border-left:2px solid var(--color-primario); padding-left:12px; }
+        .hero-stats .stat b { display:block; font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text); }
+        .hero-stats .stat span { font-size:11.5px; color:var(--bulma-text-weak); font-family:'IBM Plex Mono'; }
+
+        /* Meter Unit (Hero) */
+        .meter-unit {
+            background: var(--bulma-scheme-main-bis);
+            border: 1px solid var(--bulma-border);
+            border-radius: 10px;
+            padding: 26px 26px 22px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 20px 50px -20px rgba(0,0,0,0.6);
+        }
+        .meter-unit .meter-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+        .meter-unit .meter-head .label { font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); letter-spacing:0.08em; text-transform:uppercase; }
+        .meter-unit .meter-head .plate { font-family:'IBM Plex Mono'; font-size:10px; color:var(--bulma-text-weak); opacity:.6; }
+        .readout-row { display:flex; align-items:flex-end; justify-content:space-between; margin-top:6px; gap:14px; flex-wrap:wrap; }
+        .odometer { display:flex; gap:3px; background:#0D1113; border:1px solid var(--bulma-border); border-radius:4px; padding:6px 8px; }
+        .odometer .digit {
+            font-family:'IBM Plex Mono'; font-weight:600; font-size:22px; color:var(--color-primario-bright);
+            background:#0A0D0E; width:20px; text-align:center; border-radius:2px;
+        }
+        .odometer-wrap { display:flex; flex-direction:column; gap:4px; }
+        .odometer-wrap .u { font-family:'IBM Plex Mono'; font-size:10px; color:var(--bulma-text-weak); }
+        .cat-block { text-align:right; }
+        .cat-block .cat { font-family:'Big Shoulders Display'; font-weight:800; font-size:26px; }
+        .cat-block .prob { font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); }
+
+        /* Section specifics */
+        .section-tag { font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--color-primario-bright); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; display:block; }
+        .need-col { padding: 28px 30px; }
+        .need-col.problem { background: var(--bulma-scheme-main-bis); border-right: 1px solid var(--bulma-border); }
+        .need-col.response { background: var(--bulma-scheme-main-ter); }
+        @media (max-width: 768px) { .need-col.problem { border-right: none; border-bottom: 1px solid var(--bulma-border); } }
+
+        /* Pipeline */
+        .pipeline-track { position: relative; }
+        .pipeline-track::before {
+            content:""; position:absolute; top:34px; left:8%; right:8%; height:2px;
+            background:repeating-linear-gradient(90deg, var(--color-primario) 0 10px, transparent 10px 16px);
+            z-index:0;
+        }
+        @media(max-width:768px){ .pipeline-track::before{display:none;} }
+        .node { position:relative; z-index:1; padding:0 18px; }
+        .node .pin {
+            width:16px; height:16px; border-radius:50%; background:var(--bulma-scheme-main);
+            border:2px solid var(--color-primario); margin-bottom:16px;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .node .pin::after { content:""; width:6px;height:6px;border-radius:50%; background:var(--color-primario-bright); }
+        .node ul { list-style:none; display:flex; flex-direction:column; gap:6px; margin-left:0; margin-top:10px; }
+        .node li { font-size:13.5px; color:var(--bulma-text-weak); padding-left:14px; position:relative; }
+        .node li::before { content:"—"; position:absolute; left:0; color:var(--color-primario); }
+
+        /* Demo */
+        .field-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--bulma-border); font-size:13.5px; }
+        .field-row span:first-child { color:var(--bulma-text-weak); font-family:'IBM Plex Mono'; font-size:12px; }
+        .field-row span:last-child { font-weight:600; }
+
+        /* Stack & Edge */
+        .breaker { background: var(--bulma-scheme-main-bis); border: 1px solid var(--bulma-border); border-radius: 6px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+        .breaker .led { width: 8px; height: 8px; border-radius: 50%; background: #7FA06B; box-shadow: 0 0 6px #7FA06B; flex-shrink: 0; }
+        .edge-item { border: 1px solid var(--bulma-border); border-left: 3px solid var(--color-primario); border-radius: 4px; background: var(--bulma-scheme-main-bis); padding: 18px 20px; height: 100%; }
+
+        @media (prefers-reduced-motion: reduce){ .needle{transition:none;} .eyebrow .dot{animation:none;} }
+    </style>
 </head>
 <body>
 
-<!-- ===== Navbar ===== -->
-<nav class="navbar is-light" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand">
-        <a class="navbar-item is-size-4 has-text-weight-bold" href="#" id="nav-inicio">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="78" height="78" style="margin-right: 10px;max-height: none;">
-                <style>
-                    .glow { fill: #FFEB3B; opacity: 0; transition: opacity 0.3s ease; }
-                    .glass { fill: #CFD8DC; stroke: #607D8B; stroke-width: 2; transition: fill 0.3s ease, stroke 0.3s ease; }
-                    .filament { stroke: #78909C; stroke-width: 2; fill: none; stroke-linecap: round; transition: stroke 0.3s ease; }
-                    .base { fill: #9E9E9E; }
-                    .cap { fill: #757575; }
-                    .stem { stroke: #2E7D32; stroke-width: 4; stroke-linecap: round; }
-                    .leaf { fill: #43A047; stroke: #1B5E20; stroke-width: 1; }
-                    .soil { fill: #795548; }
-
-                    html[data-theme="dark"] .glow { opacity: 0.55; }
-                    html[data-theme="dark"] .glass { fill: #FFEB3B; stroke: #F9A825; }
-                    html[data-theme="dark"] .filament { stroke: #E65100; }
-                </style>
-                <defs>
-                    <filter id="glow-filter" x="-60%" y="-60%" width="220%" height="220%">
-                        <feGaussianBlur stdDeviation="4" />
-                    </filter>
-                </defs>
-
-                <!-- 1. El tallo  -->
-                <line class="stem" x1="50" y1="88" x2="50" y2="65" />
-
-                <!-- 2. Hojas  -->
-                <path class="leaf" d="M50 86 C39 83 33 75 30 66 C43 68 50 75 50 86 Z" />
-                <path class="leaf" d="M50 80 C61 77 67 70 70 63 C58 65 50 70 50 80 Z" />
-
-                <!-- 3. La tierra  -->
-                <path class="soil" d="M28 96 Q34 88 42 95 Q50 87 58 95 Q66 88 72 96 Z" />
-
-                <!-- 4. Bombilla  -->
-                <circle class="glow" cx="50" cy="32" r="26" filter="url(#glow-filter)" />
-                <circle class="glass" cx="50" cy="32" r="20.8" />
-
-                <path class="filament" d="M41 26 C41 21 46 21 46 26 C46 31 54 31 54 26 C54 21 59 21 59 26" transform="translate(0,4)" />
-
-                <!-- Rosca -->
-                <rect class="base" x="42" y="51" width="16" height="5.2" rx="1.5" />
-                <rect class="base" x="42" y="56.2" width="16" height="5.2" rx="1.5" />
-                <rect class="cap" x="43.5" y="61.4" width="13" height="6.5" rx="1.5" />
-            </svg>
-            EnergiAI
-        </a>
-
-        <a role="button" class="navbar-burger" data-target="navbar-menu" aria-label="menu" aria-expanded="false">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </a>
-    </div>
-
-    <div id="navbar-menu" class="navbar-menu">
-        <div class="navbar-end">
-            <!-- Menú para usuarios NO autenticados -->
-            <div id="menu-invitado" class="navbar-item">
-                <div class="buttons">
-                    <a class="button is-light" data-target="modal-registro">Registrarse</a>
-                    <a class="button is-primary" data-target="modal-login">Ingresar</a>
+<nav class="navbar is-fixed-top" style="background:rgba(18,24,26,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--bulma-border);">
+    <div class="container px-4 is-max-widescreen">
+        <div class="navbar-brand">
+            <a class="navbar-item is-flex is-align-items-center" href="#">
+                <div class="bolt" style="width:10px;height:10px;border-radius:50%;background:var(--color-primario); box-shadow:0 0 8px var(--color-primario); margin-right:10px;"></div>
+                <span class="has-text-weight-bold is-size-5" style="font-family:'Big Shoulders Display'; letter-spacing:0.03em;">EnergiAI</span>
+                <span class="is-hidden-mobile ml-2 pl-2" style="font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); border-left:1px solid var(--bulma-border);">G9 · LATAM TEAM 12</span>
+            </a>
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="landing-navbar">
+                <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+            </a>
+        </div>
+        <div class="navbar-menu" id="landing-navbar">
+            <div class="navbar-end" style="font-size:13px; font-family:'Inter';">
+                <a class="navbar-item" href="#como-funciona">Cómo funciona</a>
+                <a class="navbar-item" href="#demo">Demo</a>
+                <a class="navbar-item" href="#stack">Stack</a>
+                <a class="navbar-item" href="#destacamos">Por qué destacamos</a>
+                <div class="navbar-item">
+                    <a href="dashboard.html" class="button is-primary is-small" style="font-family:'IBM Plex Mono';">Ir al Panel</a>
                 </div>
-            </div>
-
-            <!-- Menú para usuarios autenticados (separados para el menú hamburguesa) -->
-            <div class="navbar-item item-usuario is-hidden">
-                <span id="user-email-display" class="has-text-weight-bold" style="color: var(--color-primario);"></span>
-            </div>
-            <a class="navbar-item item-usuario is-hidden" id="btn-historico" data-target="modal-historico">
-                Ver histórico
-            </a>
-            <a class="navbar-item item-usuario is-hidden" id="btn-usuarios" data-target="modal-usuarios">
-                Usuarios
-            </a>
-            <a class="navbar-item item-usuario is-hidden" id="btn-subir-csv" data-target="modal-csv">
-                Subir .csv
-            </a>
-            <div class="navbar-item item-usuario is-hidden">
-                <button class="button is-danger is-light is-small is-fullwidth" id="btn-logout">Salir</button>
-            </div>
-
-            <!-- Botón de Tema oscuro/claro -->
-            <div class="navbar-item">
-                <button class="button is-small" id="toggle-tema" type="button" aria-label="Cambiar tema">
-                    <span id="icono-tema">🌙</span>
-                </button>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- ===== Contenido principal ===== -->
-<section class="section">
-    <div class="container" style="max-width: 560px;">
-        <h1 class="title">EnergiAI</h1>
-        <p class="subtitle">Análisis de consumo energético</p>
-
-        <div class="box">
-            <!-- <form id="form-consumo" novalidate> -->
-            <form id="form-consumo">
-                <div class="field">
-                    <label class="label" for="consumoKwh">Consumo en kWh</label>
-                    <div class="control">
-                        <input class="input" type="number" id="consumoKwh" min="0" step="0.1" required>
-                    </div>
+<section class="section mt-6">
+    <div class="container px-4 is-max-widescreen">
+        <div class="columns is-vcentered is-variable is-8">
+            <div class="column is-6">
+                <div class="eyebrow"><span class="dot"></span> API EN PRODUCCIÓN · OCI AMPERE A1</div>
+                <h1 class="title" style="font-size:3.5rem; line-height:0.98; font-weight:800; font-family:'Big Shoulders Display';">Cada kilowatt<br>cuenta una <span class="has-text-primary">historia.</span></h1>
+                <p class="subtitle is-5 has-text-grey mt-4 mb-5">EnergiAI lee el patrón de consumo eléctrico de un hogar u organización y devuelve, en segundos, un diagnóstico accionable: perfil de eficiencia, recomendaciones concretas y el impacto real en la factura.</p>
+                <div class="buttons">
+                    <a href="#demo" class="button is-primary" style="font-family:'IBM Plex Mono'; font-weight:600;">Ver demo interactiva</a>
+                    <a href="#destacamos" class="button is-light is-outlined" style="font-family:'IBM Plex Mono';">Por qué destacamos</a>
                 </div>
-
-                <div class="field">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input type="checkbox" id="usoHorarioPico">
-                            Uso en horario pico
-                        </label>
-                    </div>
+                <div class="hero-stats">
+                    <div class="stat"><b>3</b><span>PERFILES CLASIFICADOS</span></div>
+                    <div class="stat"><b>HTTPS</b><span>DOMINIO PROPIO</span></div>
+                    <div class="stat"><b>MySQL</b><span>HEATWAVE EN OCI</span></div>
+                    <div class="stat"><b>JWT</b><span>AUTH + HISTORIAL</span></div>
                 </div>
+            </div>
 
-                <div class="field">
-                    <label class="label" for="cantidadEquipos">Cantidad de equipos</label>
-                    <div class="control">
-                        <input class="input" type="number" id="cantidadEquipos" min="1" required>
+            <div class="column is-6">
+                <div class="meter-unit">
+                    <div class="meter-head">
+                        <span class="label">Medidor · POST /analisis-energetico</span>
+                        <span class="plate">MOD. EA-01</span>
                     </div>
-                </div>
-
-                <div class="field">
-                    <label class="label" for="tipoInmueble">Tipo de inmueble</label>
-                    <div class="control">
-                        <div class="select is-fullwidth">
-                            <select id="tipoInmueble" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="Casa">Casa</option>
-                                <option value="Departamento">Departamento</option>
-                            </select>
+                    <svg id="gauge-hero" class="gauge" viewBox="0 0 300 190" style="width:100%;">
+                        <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22" stroke-linecap="butt"/>
+                        <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22" stroke-linecap="butt"/>
+                        <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22" stroke-linecap="butt"/>
+                        <text x="60" y="172" class="zone-label" fill="var(--bulma-text-weak)" text-anchor="middle">EFICIENTE</text>
+                        <text x="150" y="20" class="zone-label" fill="var(--bulma-text-weak)" text-anchor="middle">MODERADO</text>
+                        <text x="240" y="172" class="zone-label" fill="var(--bulma-text-weak)" text-anchor="middle">INEFICIENTE</text>
+                        <g class="needle" id="needle-hero" style="transform:rotate(-90deg);">
+                            <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+                            <circle cx="150" cy="150" r="8" fill="#EDE7D9"/>
+                            <circle cx="150" cy="150" r="3" fill="#12181A"/>
+                        </g>
+                    </svg>
+                    <div class="readout-row">
+                        <div class="odometer-wrap">
+                            <div class="odometer" id="odometer-hero">
+                                <div class="digit">4</div><div class="digit">2</div><div class="digit">0</div>
+                            </div>
+                            <span class="u">kWh / mes</span>
+                        </div>
+                        <div class="cat-block">
+                            <div class="cat cat-ineficiente" id="cat-hero">Ineficiente</div>
+                            <div class="prob" id="prob-hero">probabilidad 0.81</div>
                         </div>
                     </div>
                 </div>
-
-                <div class="field">
-                    <label class="label" for="horasAltoConsumo">Horas de alto consumo</label>
-                    <div class="control">
-                        <input class="input" type="number" id="horasAltoConsumo" min="0" max="24" required>
-                    </div>
-                </div>
-
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-primary is-fullwidth" type="submit">Analizar</button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
-
-        <div id="resultado"></div>
-        <canvas id="grafico-probabilidad" width="300" height="200"></canvas>
     </div>
 </section>
 
-<!-- ===== Modal: Histórico ===== -->
-<div class="modal" id="modal-historico">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Histórico de análisis</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <p class="has-text-grey">
-                Acá vamos a listar los análisis previos una vez que el backend exponga el endpoint correspondiente (por ejemplo, <code>GET /analisis-energetico</code>).
-            </p>
-        </section>
+<section class="section pt-0">
+    <div class="container px-4 is-max-widescreen">
+        <div class="columns is-gapless box p-0 is-clipped m-0" style="border:1px solid var(--bulma-border); background:transparent;">
+            <div class="column is-6 need-col problem">
+                <h3 class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">El problema</h3>
+                <p class="has-text-grey-light is-size-6">Las facturas eléctricas suben, pero casi nadie sabe qué hábito específico las infla: ¿el horario de uso, la cantidad de equipos, el tipo de vivienda? Sin esa visibilidad, no hay forma de decidir qué cambiar.</p>
+            </div>
+            <div class="column is-6 need-col response">
+                <h3 class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Nuestra respuesta</h3>
+                <p class="has-text-grey-light is-size-6">Un modelo entrenado clasifica el perfil energético en Eficiente, Moderado o Ineficiente, explica por qué con recomendaciones puntuales y traduce todo a un costo mensual estimado, en una sola llamada de API.</p>
+            </div>
+        </div>
     </div>
-</div>
-<!-- ===== Modal: Login ===== -->
-<div class="modal" id="modal-login">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Ingresar</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <form id="form-login">
-                <div class="field">
-                    <label class="label">Email</label>
-                    <div class="control">
-                        <input class="input" type="email" id="login-email" required>
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">Contraseña</label>
-                    <div class="control">
-                        <input class="input" type="password" id="login-password" required>
-                    </div>
-                </div>
-                <p id="error-login" class="help is-danger"></p>
-                <button class="button is-primary is-fullwidth mt-4" type="submit">Ingresar</button>
-            </form>
-        </section>
-    </div>
-</div>
-<!-- ===== Modal: Registro ===== -->
-<div class="modal" id="modal-registro">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Crear Cuenta</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <form id="form-registro">
-                <div class="field">
-                    <label class="label">Email</label>
-                    <div class="control">
-                        <input class="input" type="email" id="reg-email" required>
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">Contraseña</label>
-                    <div class="control">
-                        <input class="input" type="password" id="reg-password" required>
-                    </div>
-                </div>
-                <p id="error-registro" class="help is-danger"></p>
-                <button class="button is-primary is-fullwidth mt-4" type="submit">Registrarme</button>
-            </form>
-        </section>
-    </div>
-</div>
+</section>
 
-<!-- ===== Modal: Usuarios ===== -->
-<div class="modal" id="modal-usuarios">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Usuarios</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <p class="has-text-grey">
-                Gestión de usuarios pendiente de definir con el backend (endpoint, roles, autenticación).
-            </p>
-        </section>
+<section id="como-funciona" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-6" style="max-width:60ch;">
+            <span class="section-tag">Arquitectura</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">De la lectura del medidor a la recomendación</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">Tres etapas conectadas, cada una con una responsabilidad clara — el mismo recorrido que sigue un dato real dentro del sistema.</p>
+        </div>
+        <div class="pipeline-track columns mt-5">
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">01 — Ciencia de datos</h4>
+                <ul>
+                    <li>EDA y limpieza sobre datos simulados/reales</li>
+                    <li>Regresión Logística y Random Forest</li>
+                    <li>Modelo serializado, servido vía FastAPI</li>
+                </ul>
+            </div>
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">02 — Backend API</h4>
+                <ul>
+                    <li>Spring Boot 4.1 + Java 21, con TDD</li>
+                    <li>Validación de entrada y manejo de errores</li>
+                    <li>Auth JWT, historial e import CSV masivo</li>
+                </ul>
+            </div>
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">03 — OCI</h4>
+                <ul>
+                    <li>Compute Ampere A1 (ARM), Docker Compose</li>
+                    <li>MySQL HeatWave para persistencia</li>
+                    <li>HTTPS propio vía Nginx + Let's Encrypt</li>
+                </ul>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<!-- ===== Modal: Subir CSV ===== -->
-<div class="modal" id="modal-csv">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Subir archivo .csv</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <div class="field">
-                <div class="file has-name is-fullwidth">
-                    <label class="file-label">
-                        <input class="file-input" type="file" id="input-csv" accept=".csv">
-                        <span class="file-cta">
-                                <span class="file-label">Elegir archivo…</span>
-                            </span>
-                        <span class="file-name" id="nombre-csv">Ningún archivo seleccionado</span>
-                    </label>
+<section id="demo" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5" style="max-width:60ch;">
+            <span class="section-tag">Demo</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">Probá los tres perfiles</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">Misma API, tres lecturas de consumo distintas. Elegí un escenario para ver cómo cambia el diagnóstico.</p>
+        </div>
+
+        <div class="buttons mb-5">
+            <button class="button is-small scenario-btn" data-scenario="eficiente" style="font-family:'IBM Plex Mono';">Eficiente</button>
+            <button class="button is-small scenario-btn" data-scenario="moderado" style="font-family:'IBM Plex Mono';">Moderado</button>
+            <button class="button is-small is-primary is-outlined scenario-btn is-active" data-scenario="ineficiente" style="font-family:'IBM Plex Mono';">Ineficiente</button>
+        </div>
+
+        <div class="box p-5" style="background:var(--bulma-scheme-main-bis);">
+            <div class="columns is-variable is-6">
+                <div class="column is-6">
+                    <div class="is-size-7 has-text-grey mb-3" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:.08em;">Entrada · consumo reportado</div>
+                    <div class="field-row"><span>consumo_kwh</span><span class="has-text-white" id="f-consumo">420</span></div>
+                    <div class="field-row"><span>uso_horario_pico</span><span class="has-text-white" id="f-pico">true</span></div>
+                    <div class="field-row"><span>cantidad_equipos</span><span class="has-text-white" id="f-equipos">10</span></div>
+                    <div class="field-row"><span>tipo_inmueble</span><span class="has-text-white" id="f-inmueble">Casa</span></div>
+                    <div class="field-row"><span>horas_alto_consumo</span><span class="has-text-white" id="f-horas">8</span></div>
+                </div>
+                <div class="column is-6">
+                    <div class="is-size-7 has-text-grey mb-4" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:.08em;">Salida · diagnóstico</div>
+                    <div class="is-flex is-align-items-center mb-4">
+                        <svg class="gauge" viewBox="0 0 300 190" style="max-width:200px;">
+                            <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22"/>
+                            <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22"/>
+                            <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22"/>
+                            <g class="needle" id="needle-demo" style="transform:rotate(63deg);">
+                                <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+                                <circle cx="150" cy="150" r="8" fill="#EDE7D9"/>
+                                <circle cx="150" cy="150" r="3" fill="#12181A"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <ul class="rec-list m-0" id="rec-list">
+                        <li>Reducir el uso de equipos durante horarios pico</li>
+                        <li>Evaluar aparatos con alto consumo energético</li>
+                        <li>Distribuir actividades de mayor consumo a lo largo del día</li>
+                    </ul>
+                    <div class="cost-card mt-4">
+                        <span class="cl">costo_estimado_mensual</span>
+                        <span class="cv" id="f-costo">R$ 315,00</span>
+                    </div>
                 </div>
             </div>
-            <div class="help">
-                <p class="mb-2">El archivo CSV debe incluir las siguientes columnas:</p>
-                <div class="tags">
-                    <span class="tag is-dark">fecha</span>
-                    <span class="tag is-dark">consumo_kwh</span>
-                    <span class="tag is-dark">uso_horario_pico</span>
-                    <span class="tag is-dark">cantidad_equipos</span>
-                    <span class="tag is-dark">tipo_inmueble</span>
-                    <span class="tag is-dark">horas_alto_consumo</span>
+        </div>
+    </div>
+</section>
+
+<section id="stack" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5">
+            <span class="section-tag">Panel de control</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">Stack técnico</h2>
+        </div>
+        <div class="columns is-multiline is-mobile">
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Java 21 + Spring Boot 4.1</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">FastAPI · modelo ML</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Python · Scikit-Learn</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">MySQL HeatWave (OCI)</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">OCI Compute Ampere A1</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Docker Compose</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Nginx + Let's Encrypt</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Swagger / OpenAPI</span></div></div>
+        </div>
+    </div>
+</section>
+
+<section id="destacamos" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5" style="max-width:60ch;">
+            <span class="section-tag">Diferencial frente a otros equipos</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">No es un notebook. Es un sistema desplegado.</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">La consigna es la misma para todos los equipos del hackathon — esto es lo que hicimos con ella.</p>
+        </div>
+        <div class="columns is-multiline">
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">API en producción, no una demo local</h4>
+                    <p class="mt-2 has-text-grey">HTTPS con dominio propio (appenergia.duckdns.org), corriendo 24/7 sobre OCI Compute Ampere A1.</p>
                 </div>
             </div>
-        </section>
-        <footer class="modal-card-foot">
-            <button class="button is-primary" id="btn-confirmar-csv" disabled>Subir</button>
-            <button class="button">Cancelar</button>
-        </footer>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Persistencia real</h4>
+                    <p class="mt-2 has-text-grey">Migración completa a MySQL HeatWave en OCI, con historial de análisis consultable, no solo la respuesta puntual del endpoint.</p>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Seguridad desde el diseño</h4>
+                    <p class="mt-2 has-text-grey">Autenticación JWT y Spring Security protegiendo los endpoints, construido con TDD desde el primer commit.</p>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Operable a escala</h4>
+                    <p class="mt-2 has-text-grey">Importación masiva por CSV para analizar múltiples lecturas de consumo en una sola carga, no solo un registro a la vez.</p>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="js/app.js"></script>
+<footer class="footer mt-6" style="background:var(--bulma-scheme-main-bis); border-top:1px solid var(--bulma-border); padding:3rem 1.5rem;">
+    <div class="container px-4 is-max-widescreen is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap" style="gap:1rem;">
+        <div class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">EnergiAI — Sostenibilidad, Energía y Hogares Inteligentes</div>
+        <div class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Equipo G9-LATAM-Team-12 · <a href="https://appenergia.duckdns.org" target="_blank" rel="noopener" class="has-text-primary">appenergia.duckdns.org</a></div>
+    </div>
+</footer>
+
+<script>
+    // Navbar toggle
+    document.addEventListener('DOMContentLoaded', () => {
+        const burger = document.querySelector('.navbar-burger');
+        if (burger) {
+            burger.addEventListener('click', () => {
+                const target = document.getElementById(burger.dataset.target);
+                burger.classList.toggle('is-active');
+                if (target) target.classList.toggle('is-active');
+            });
+        }
+    });
+
+    const scenarios = {
+        eficiente: {
+            consumo: 180, pico: 'false', equipos: 4, inmueble: 'Apartamento', horas: 2,
+            categoria: 'Eficiente', prob: 0.88, costo: 135.00, percent: 0.15,
+            recs: [
+                'Mantener los hábitos actuales fuera del horario pico',
+                'Seguir monitoreando el consumo mensual',
+                'Evaluar migrar los equipos restantes a modelos de bajo consumo'
+            ]
+        },
+        moderado: {
+            consumo: 290, pico: 'true', equipos: 7, inmueble: 'Casa', horas: 5,
+            categoria: 'Moderado', prob: 0.74, costo: 217.50, percent: 0.5,
+            recs: [
+                'Redistribuir el uso de equipos fuera del horario pico',
+                'Revisar el consumo en standby de los electrodomésticos',
+                'Evaluar el aislamiento térmico para reducir climatización'
+            ]
+        },
+        ineficiente: {
+            consumo: 420, pico: 'true', equipos: 10, inmueble: 'Casa', horas: 8,
+            categoria: 'Ineficiente', prob: 0.81, costo: 315.00, percent: 0.85,
+            recs: [
+                'Reducir el uso de equipos durante horarios pico',
+                'Evaluar aparatos con alto consumo energético',
+                'Distribuir actividades de mayor consumo a lo largo del día'
+            ]
+        }
+    };
+
+    function angleFor(percent){ return -90 + percent * 180; }
+    function catClass(cat){
+        return cat === 'Eficiente' ? 'cat-eficiente' : cat === 'Moderado' ? 'cat-moderado' : 'cat-ineficiente';
+    }
+    function digitsFor(n){
+        return String(n).split('').map(d => `<div class="digit">${d}</div>`).join('');
+    }
+
+    function applyScenario(key, animateHero){
+        const s = scenarios[key];
+
+        document.getElementById('needle-demo').style.transform = `rotate(${angleFor(s.percent)}deg)`;
+        document.getElementById('f-consumo').textContent = s.consumo;
+        document.getElementById('f-pico').textContent = s.pico;
+        document.getElementById('f-equipos').textContent = s.equipos;
+        document.getElementById('f-inmueble').textContent = s.inmueble;
+        document.getElementById('f-horas').textContent = s.horas;
+        document.getElementById('f-costo').textContent = 'R$ ' + s.costo.toFixed(2).replace('.', ',');
+        document.getElementById('rec-list').innerHTML = s.recs.map(r => `<li>${r}</li>`).join('');
+
+        document.querySelectorAll('.scenario-btn').forEach(b => {
+            b.classList.remove('is-active', 'is-primary', 'is-outlined');
+            if (b.dataset.scenario === key) {
+                b.classList.add('is-active', 'is-primary', 'is-outlined');
+            }
+        });
+
+        if(animateHero){
+            document.getElementById('needle-hero').style.transform = `rotate(${angleFor(s.percent)}deg)`;
+            document.getElementById('odometer-hero').innerHTML = digitsFor(s.consumo);
+            const catEl = document.getElementById('cat-hero');
+            catEl.textContent = s.categoria;
+            catEl.className = 'cat ' + catClass(s.categoria);
+            document.getElementById('prob-hero').textContent = 'probabilidad ' + s.prob.toFixed(2);
+        }
+    }
+
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyScenario(btn.dataset.scenario, true));
+    });
+
+    window.addEventListener('load', () => {
+        document.getElementById('needle-hero').style.transform = 'rotate(-90deg)';
+        document.getElementById('needle-demo').style.transform = 'rotate(-90deg)';
+        setTimeout(() => applyScenario('ineficiente', true), 150);
+    });
+</script>
+
 </body>
 </html>

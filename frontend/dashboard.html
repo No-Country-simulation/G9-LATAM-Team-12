@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnergiAI — Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="overflow-y: hidden;">
+
+<!-- TOPBAR -->
+<nav class="navbar" style="border-bottom: 1px solid var(--bulma-border-weak);">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="38" height="38" style="margin-right: 6px;">
+                <style>
+                    .glow { fill: #FFEB3B; opacity: 0.55; }
+                    .glass { fill: #FFEB3B; stroke: #F9A825; stroke-width: 2; }
+                    .filament { stroke: #E65100; stroke-width: 2; fill: none; stroke-linecap: round; }
+                    .base { fill: #9E9E9E; }
+                    .cap { fill: #757575; }
+                    .stem { stroke: #2E7D32; stroke-width: 4; stroke-linecap: round; }
+                    .leaf { fill: #43A047; stroke: #1B5E20; stroke-width: 1; }
+                    .soil { fill: #795548; }
+                </style>
+                <line class="stem" x1="50" y1="88" x2="50" y2="65" />
+                <path class="leaf" d="M50 86 C39 83 33 75 30 66 C43 68 50 75 50 86 Z" />
+                <path class="leaf" d="M50 80 C61 77 67 70 70 63 C58 65 50 70 50 80 Z" />
+                <path class="soil" d="M28 96 Q34 88 42 95 Q50 87 58 95 Q66 88 72 96 Z" />
+                <circle class="glass" cx="50" cy="32" r="20.8" />
+                <path class="filament" d="M41 26 C41 21 46 21 46 26 C46 31 54 31 54 26 C54 21 59 21 59 26" transform="translate(0,4)" />
+                <rect class="base" x="42" y="51" width="16" height="5.2" rx="1.5" />
+                <rect class="base" x="42" y="56.2" width="16" height="5.2" rx="1.5" />
+                <rect class="cap" x="43.5" y="61.4" width="13" height="6.5" rx="1.5" />
+            </svg>
+            <span class="ml-2 has-text-weight-bold is-size-5" style="font-family:'Big Shoulders Display';">EnergiAI</span>
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="sidebar-menu">
+            <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+        </a>
+    </div>
+
+    <div class="navbar-menu" id="nav-menu-top">
+        <div class="navbar-start">
+            <div class="navbar-item">
+                <div class="buttons has-addons">
+                    <button id="mode-hogar" class="button is-small is-primary" onclick="setMode('hogar')">Hogar</button>
+                    <button id="mode-empresa" class="button is-small" onclick="setMode('empresa')">Empresa</button>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-end">
+            <div id="menu-invitado" class="navbar-item">
+                <div class="buttons">
+                    <button class="button is-light" data-target="modal-registro">Registrarse</button>
+                    <button class="button is-primary" data-target="modal-login">Ingresar</button>
+                </div>
+            </div>
+            <div class="item-usuario is-hidden navbar-item">
+                <span id="user-email-display" class="has-text-weight-bold has-text-primary mr-3" style="font-family:'IBM Plex Mono'; font-size:13px;"></span>
+                <button class="button is-danger is-light is-small" id="btn-logout">Salir</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- SECONDARY NAV (formerly sidebar) -->
+<aside class="menu is-hidden-touch" id="sidebar-menu" style="border-bottom: 1px solid var(--bulma-border-weak); padding: 0.5rem 1.5rem; background-color: var(--bulma-scheme-main-bis);">
+    <div class="is-flex is-align-items-center" style="gap: 2rem; overflow-x: auto;">
+        <ul class="menu-list desktop-horizontal-menu">
+            <li><a class="navitem is-active" data-view="lectura"><span class="pin"></span> Nueva lectura</a></li>
+            <li><a class="navitem" data-view="resultado"><span class="pin"></span> Resultado</a></li>
+            <li><a class="navitem" data-view="historial"><span class="pin"></span> Historial</a></li>
+            <li><a class="navitem empresa-only" data-view="ranking"><span class="pin"></span> Ranking de sedes</a></li>
+            <li><a class="navitem" data-view="simulador"><span class="pin"></span> Simulador de ahorro</a></li>
+            <li><a class="navitem" data-view="alertas"><span class="pin"></span> Alertas</a></li>
+            <li><a class="navitem" data-view="lab"><span class="pin"></span> EnergiAI Lab <span class="tag is-warning is-light is-rounded ml-2" style="font-size:10px; height:18px;">BETA</span></a></li>
+        </ul>
+        <div class="is-divider-vertical is-hidden-touch" style="width: 1px; height: 24px; background: var(--bulma-border-weak);"></div>
+        <ul class="menu-list desktop-horizontal-menu">
+            <li><a class="navitem" data-view="config"><span class="pin"></span> Configuración</a></li>
+        </ul>
+    </div>
+</aside>
+
+<div class="columns is-gapless" id="main-container" style="height: calc(100vh - 7rem);">
+
+    <!-- MAIN CONTENT -->
+    <div class="column main-content-column" style="overflow-y: auto; padding: 2rem;">
+
+        <!-- NUEVA LECTURA -->
+        <div class="view is-active" id="view-lectura">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">POST /analisis-energetico</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Nueva lectura de consumo</h1>
+                <p class="subtitle is-6 has-text-grey">Ingresá los datos del período a analizar. El modelo devuelve la clasificación, las recomendaciones y el costo estimado.</p>
+            </div>
+
+            <div class="box">
+                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">DATOS DE CONSUMO</h3>
+                <form id="form-consumo">
+                    <div class="columns is-multiline">
+                        <div class="column is-6-tablet">
+                            <div class="field">
+                                <label class="label is-small">Consumo mensual (kWh)</label>
+                                <div class="control">
+                                    <input class="input" type="number" id="consumoKwh" step="0.1" min="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-6-tablet">
+                            <div class="field">
+                                <label class="label is-small">Tipo de inmueble</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select id="tipoInmueble" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="Casa">Casa</option>
+                                            <option value="Departamento">Departamento</option>
+                                            <option value="Comercial">Comercial</option>
+                                            <option value="Oficina" disabled>Oficina (Próximamente)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-6-tablet">
+                            <div class="field">
+                                <label class="label is-small">Cantidad de equipos</label>
+                                <div class="control">
+                                    <input class="input" type="number" id="cantidadEquipos" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-6-tablet">
+                            <div class="field">
+                                <label class="label is-small">Horas de alto consumo / día</label>
+                                <div class="control">
+                                    <input class="input" type="number" id="horasAltoConsumo" min="0" max="24" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-12">
+                            <div class="switch-field">
+                                <label class="label is-small mb-0" style="color:var(--bulma-text);">Uso en horario pico</label>
+                                <div class="toggle" id="toggle-pico" onclick="this.classList.toggle('on'); document.getElementById('usoHorarioPico').checked = this.classList.contains('on');"></div>
+                                <input type="checkbox" id="usoHorarioPico" style="display:none;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control mt-5">
+                        <button class="button is-primary" type="submit">Analizar consumo</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="box item-usuario is-hidden mt-4">
+                <h3 class="subtitle is-6 mb-3" style="font-family:'IBM Plex Mono';">CARGA MASIVA (MÚLTIPLES SEDES)</h3>
+                <div class="dropzone" data-target="modal-csv">
+                    Clic aquí para abrir el panel y subir un archivo <b class="has-text-primary">.csv</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="view" id="view-resultado">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Diagnóstico</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Resultado del análisis</h1>
+                <p class="subtitle is-6 has-text-grey">Clasificación del perfil energético con probabilidad, recomendaciones puntuales y el impacto estimado en la factura.</p>
+            </div>
+            <div class="box" id="resultado-card">
+                <div class="has-text-grey has-text-centered py-6">Todavía no cargaste una lectura. Andá a "Nueva lectura" para generar un resultado.</div>
+            </div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div class="view" id="view-historial">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Seguimiento</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Historial de consumo</h1>
+                <p class="subtitle is-6 has-text-grey">Evolución mes a mes. Sirve para confirmar si un cambio de hábito realmente impactó en el consumo.</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="columns is-multiline mb-4">
+                <div class="column is-4-tablet">
+                    <div class="box has-text-centered py-4">
+                        <p class="heading is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Promedio Mensual</p>
+                        <p class="title is-4 has-text-primary" id="res-promedio" style="font-family:'IBM Plex Mono';">--</p>
+                    </div>
+                </div>
+                <div class="column is-4-tablet">
+                    <div class="box has-text-centered py-4">
+                        <p class="heading is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Cat. Frecuente</p>
+                        <p class="title is-4" id="res-frecuente" style="font-family:'Big Shoulders Display';">--</p>
+                    </div>
+                </div>
+                <div class="column is-4-tablet">
+                    <div class="box has-text-centered py-4">
+                        <p class="heading is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Tendencia</p>
+                        <p class="title is-4" id="res-tendencia" style="font-family:'Big Shoulders Display';">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="columns is-multiline mb-4">
+                <div class="column is-8-tablet">
+                    <div class="box" style="height: 100%;">
+                        <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">EVOLUCIÓN DE CONSUMO (kWh)</h3>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="histChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4-tablet">
+                    <div class="box" style="height: 100%; display: flex; flex-direction: column;">
+                        <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">DISTRIBUCIÓN</h3>
+                        <div style="flex: 1; position: relative; min-height: 220px;">
+                            <canvas id="catChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGISTROS</h3>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-hoverable" id="hist-table">
+                        <thead><tr><th>Fecha</th><th>kWh</th><th>Categoría</th><th>Costo estimado</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RANKING -->
+        <div class="view" id="view-ranking">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Comparación entre sedes</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Ranking de eficiencia</h1>
+                <p class="subtitle is-6 has-text-grey">Dónde está la pérdida de energía real, ordenado de más a menos eficiente.</p>
+            </div>
+            <div class="box" id="ranking-card"><div class="has-text-grey has-text-centered py-6">Funcionalidad a implementar (Requiere API multi-sede).</div></div>
+        </div>
+
+        <!-- ENERGIAI LAB -->
+        <div class="view" id="view-lab">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">R&D / Hackathon Showcase</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">EnergiAI Lab</h1>
+                <p class="subtitle is-6 has-text-grey">Prototipos en fase Alpha y Beta de nuestras próximas innovaciones tecnológicas para la gestión energética.</p>
+            </div>
+
+            <div class="columns is-multiline">
+
+                <!-- MODULE 1: OCR -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card alpha">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#00d1b2;">[ALPHA] Smart OCR Scanner</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Extracción de datos mediante Visión Computacional. Adiós a la carga manual de facturas de luz.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="position:relative; height:150px;">
+                            <svg width="120" height="150" viewBox="0 0 120 150">
+                                <rect x="10" y="10" width="100" height="130" fill="#242e30" stroke="#313D40" stroke-width="2" rx="4"/>
+                                <line x1="25" y1="30" x2="60" y2="30" stroke="#9BA3A0" stroke-width="4" stroke-linecap="round"/>
+                                <line x1="25" y1="45" x2="80" y2="45" stroke="#9BA3A0" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="25" y1="60" x2="95" y2="60" stroke="#9BA3A0" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="90" cy="30" r="10" fill="#313D40"/>
+
+                                <rect x="25" y="80" width="70" height="45" fill="#12181A" rx="2"/>
+                                <line x1="30" y1="90" x2="85" y2="90" stroke="#00d1b2" stroke-width="2"/>
+                                <line x1="30" y1="105" x2="70" y2="105" stroke="#00d1b2" stroke-width="2"/>
+                                <line x1="30" y1="120" x2="90" y2="120" stroke="#00d1b2" stroke-width="2"/>
+                            </svg>
+                            <div class="ocr-scanner" id="ocr-laser"></div>
+                        </div>
+
+                        <div class="is-flex is-justify-content-space-between is-align-items-center">
+                            <div>
+                                <span class="tag is-dark" id="ocr-result-1">kWh: ---</span>
+                                <span class="tag is-dark" id="ocr-result-2">Monto: ---</span>
+                            </div>
+                            <button class="button is-small is-primary is-outlined" id="btn-demo-ocr">Escanear Demo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 2: SOLAR -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card beta">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#ffdd57;">[BETA] Simulador Fotovoltaico</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Integración con APIs satelitales (Open-Meteo) para cálculo de ROI e irradiación solar.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:110px; align-items:flex-end; padding-bottom:10px;">
+                            <svg width="180" height="100" viewBox="0 0 180 100">
+                                <circle cx="30" cy="30" r="15" fill="#ffdd57" class="solar-sun"/>
+                                <path d="M 70 80 L 110 30 L 170 30 L 130 80 Z" fill="#242e30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="85" y1="80" x2="125" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="100" y1="80" x2="140" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="115" y1="80" x2="155" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="80" y1="67" x2="160" y2="67" stroke="#313D40" stroke-width="2"/>
+                                <line x1="90" y1="55" x2="150" y2="55" stroke="#313D40" stroke-width="2"/>
+                                <line x1="100" y1="42" x2="140" y2="42" stroke="#313D40" stroke-width="2"/>
+                            </svg>
+                        </div>
+
+                        <label class="label is-small">Potencia Instalada: <span class="has-text-warning" id="solar-kwp-val">3.0</span> kWp</label>
+                        <input type="range" class="slider is-fullwidth is-warning mb-2" min="1" max="10" step="0.5" value="3" id="solar-kwp" oninput="updateSolarDemo()">
+                        <div class="is-flex is-justify-content-space-between mt-2">
+                            <span class="is-size-7">Ahorro est.: <b class="has-text-success" id="solar-ahorro">$ 4.500 /mes</b></span>
+                            <span class="is-size-7">Paneles: <b id="solar-paneles">6</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 3: IoT TELEMETRY -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card beta">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#00d1b2;">[BETA] Telemetría IoT (Smart Plugs)</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Detección de "Consumo Vampiro" y corte remoto vía MQTT para enchufes inteligentes.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:100px; align-items:center;">
+                            <svg width="200" height="60" viewBox="0 0 200 60">
+                                <rect x="10" y="15" width="30" height="30" rx="4" fill="#242e30" stroke="#00d1b2" stroke-width="2" id="iot-plug-rect"/>
+                                <circle cx="25" cy="30" r="4" fill="#00d1b2" id="iot-plug-led"/>
+
+                                <!-- Animación de flujo -->
+                                <path d="M 40 30 L 160 30" fill="none" stroke="#00d1b2" stroke-width="3" class="iot-flow" id="iot-cable"/>
+
+                                <rect x="160" y="10" width="30" height="40" rx="2" fill="#242e30" stroke="#313D40" stroke-width="2"/>
+                                <circle cx="175" cy="40" r="3" fill="#f14668"/>
+                            </svg>
+                        </div>
+
+                        <div class="is-flex is-justify-content-space-between is-align-items-center">
+                            <div>
+                                <div class="is-size-7">Consumo en vivo:</div>
+                                <div class="title is-4 has-text-primary m-0" id="iot-consumo" style="font-family:'IBM Plex Mono';">15 W</div>
+                            </div>
+                            <div class="switch-field mb-0" onclick="toggleIotDemo()">
+                                <label class="label is-small mb-0 mr-2" style="color:var(--bulma-text);">Flujo Activo</label>
+                                <div class="toggle on" id="iot-toggle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 4: ML PREDICTIVE -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card future">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#3e8ed0;">[FUTURO] Tarificación Dinámica (ML)</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Predicción horaria mediante redes neuronales. El sistema decidirá automáticamente cuándo encender el termo.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:100px; align-items:flex-end;">
+                            <svg width="200" height="90" viewBox="0 0 200 90">
+                                <path d="M 0 80 Q 25 20, 50 60 T 100 40 T 150 70 T 200 30" fill="none" stroke="#3e8ed0" stroke-width="2" stroke-dasharray="4"/>
+                                <circle cx="100" cy="40" r="5" fill="#3e8ed0"/>
+                                <text x="100" y="25" fill="#9BA3A0" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">Valle Predicho</text>
+                                <circle cx="200" cy="30" r="5" fill="#f14668"/>
+                                <text x="180" y="15" fill="#9BA3A0" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">Pico</text>
+                            </svg>
+                        </div>
+
+                        <div class="is-flex is-justify-content-center">
+                            <span class="tag is-info is-light"><i class="fas fa-brain mr-2"></i> Modelo en fase de entrenamiento</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SIMULADOR -->
+        <div class="view" id="view-simulador">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">¿Qué pasa si...?</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Simulador de ahorro</h1>
+                <p class="subtitle is-6 has-text-grey">Movés los controles y ves en vivo cómo cambiaría la clasificación y el costo si ajustás el uso.</p>
+            </div>
+            <div class="columns is-multiline">
+                <div class="column is-6-tablet">
+                    <div class="box">
+                        <div class="field mb-5">
+                            <div class="is-flex is-justify-content-space-between mb-2" style="font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--bulma-text-weak);">
+                                <span>Cantidad de equipos</span><b class="has-text-white" id="sim-equipos-val">10</b>
+                            </div>
+                            <input class="slider is-fullwidth" type="range" id="sim-equipos" min="1" max="20" value="10" oninput="renderSimulador()" style="width:100%; accent-color:var(--bulma-primary);">
+                        </div>
+                        <div class="field mb-5">
+                            <div class="is-flex is-justify-content-space-between mb-2" style="font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--bulma-text-weak);">
+                                <span>Horas de alto consumo / día</span><b class="has-text-white" id="sim-horas-val">8</b>
+                            </div>
+                            <input class="slider is-fullwidth" type="range" id="sim-horas" min="0" max="12" value="8" oninput="renderSimulador()" style="width:100%; accent-color:var(--bulma-primary);">
+                        </div>
+                        <div class="switch-field">
+                            <label class="label is-small mb-0" style="color:var(--bulma-text);">Uso en horario pico</label>
+                            <div class="toggle on" id="sim-pico" onclick="this.classList.toggle('on'); renderSimulador();"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-6-tablet">
+                    <div class="box">
+                        <div class="gauge-row">
+                            <svg class="gauge" viewBox="0 0 300 190">
+                                <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22"/>
+                                <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22"/>
+                                <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22"/>
+                                <g class="needle" id="sim-needle" style="transform:rotate(-90deg);">
+                                    <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+                                    <circle cx="150" cy="150" r="8" fill="#EDE7D9"/><circle cx="150" cy="150" r="3" fill="#12181A"/>
+                                </g>
+                            </svg>
+                            <div class="gauge-meta">
+                                <div class="cat" id="sim-cat">—</div>
+                                <div class="cost-card" style="margin-top:10px;"><span class="cl mr-4" style="font-family:'IBM Plex Mono'; font-size:11px;">costo estimado</span><span class="cv" id="sim-costo">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALERTAS -->
+        <div class="view" id="view-alertas">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Monitoreo continuo</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Alertas de alto consumo</h1>
+                <p class="subtitle is-6 has-text-grey">Reglas que avisan cuando una lectura se sale de rango, sin tener que revisar manualmente.</p>
+            </div>
+            <div class="box">
+                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGLAS ACTIVAS</h3>
+                <div class="is-flex is-justify-content-space-between is-align-items-center py-3" style="border-bottom:1px solid var(--bulma-border-weak);">
+                    <div><div class="is-size-6">Consumo mensual &gt; 400 kWh</div><div class="is-size-7 has-text-grey">Aviso cuando cualquier lectura supera el umbral</div></div>
+                    <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                </div>
+                <div class="is-flex is-justify-content-space-between is-align-items-center py-3" style="border-bottom:1px solid var(--bulma-border-weak);">
+                    <div><div class="is-size-6">Clasificación "Ineficiente" dos meses seguidos</div><div class="is-size-7 has-text-grey">Detecta un problema persistente, no un pico aislado</div></div>
+                    <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                </div>
+                <div class="is-flex is-justify-content-space-between is-align-items-center py-3 empresa-only" style="border-bottom:1px solid var(--bulma-border-weak);">
+                    <div><div class="is-size-6">Sede fuera del promedio de la red</div><div class="is-size-7 has-text-grey">Compara cada sede contra el resto de las sedes registradas</div></div>
+                    <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                </div>
+            </div>
+            <div class="box">
+                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGISTRO RECIENTE</h3>
+                <div id="alert-log"></div>
+            </div>
+        </div>
+
+        <!-- CONFIG -->
+        <div class="view" id="view-config">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Cuenta</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Configuración</h1>
+                <p class="subtitle is-6 has-text-grey">Ajustá la tarifa de referencia — todos los cálculos de costo la usan en tiempo real.</p>
+            </div>
+            <div class="box">
+                <div class="columns is-multiline">
+                    <div class="column is-6-tablet">
+                        <div class="field">
+                            <label class="label is-small">Tarifa de referencia (por kWh)</label>
+                            <div class="control">
+                                <input class="input" type="number" step="0.01" id="in-tarifa" value="0.75" onchange="updateTariff()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-6-tablet">
+                        <div class="field">
+                            <label class="label is-small">Moneda</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="in-moneda" onchange="updateTariff()"><option>R$ (Real)</option><option>$ (Peso)</option><option>US$ (Dólar)</option></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4"><span class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Tarifa actual: <b class="has-text-white" id="tariff-display">R$ 0,75</b></span></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Modal: Login -->
+<div class="modal" id="modal-login">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Ingresar</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <form id="form-login">
+                <div class="field">
+                    <label class="label is-small">Email</label>
+                    <div class="control">
+                        <input class="input" type="email" id="login-email" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label is-small">Contraseña</label>
+                    <div class="control">
+                        <input class="input" type="password" id="login-password" required>
+                    </div>
+                </div>
+                <p id="error-login" class="help is-danger"></p>
+                <div class="control mt-5">
+                    <button class="button is-primary is-fullwidth" type="submit">Ingresar</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+<!-- Modal: Registro -->
+<div class="modal" id="modal-registro">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Crear Cuenta</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <form id="form-registro">
+                <div class="field">
+                    <label class="label is-small">Email</label>
+                    <div class="control">
+                        <input class="input" type="email" id="reg-email" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label is-small">Contraseña</label>
+                    <div class="control">
+                        <input class="input" type="password" id="reg-password" required>
+                    </div>
+                </div>
+                <p id="error-registro" class="help is-danger"></p>
+                <div class="control mt-5">
+                    <button class="button is-primary is-fullwidth" type="submit">Registrarme</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+<!-- Modal: Subir CSV -->
+<div class="modal" id="modal-csv">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Subir archivo .csv</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <div class="file has-name is-fullwidth">
+                    <label class="file-label">
+                        <input class="file-input" type="file" id="input-csv" accept=".csv">
+                        <span class="file-cta">
+                    <span class="file-label">Elegir archivo…</span>
+                </span>
+                        <span class="file-name" id="csv-hint">Ningún archivo seleccionado</span>
+                    </label>
+                </div>
+            </div>
+            <div class="help mt-4">
+                <p class="mb-2">El archivo CSV debe incluir las siguientes columnas:</p>
+                <div class="tags">
+                    <span class="tag">fecha</span>
+                    <span class="tag">consumo_kwh</span>
+                    <span class="tag">uso_horario_pico</span>
+                    <span class="tag">cantidad_equipos</span>
+                    <span class="tag">tipo_inmueble</span>
+                    <span class="tag">horas_alto_consumo</span>
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot is-justify-content-flex-end">
+            <button class="button is-light btn-cancel">Cancelar</button>
+            <button class="button is-primary" id="btn-confirmar-csv" disabled>Subir</button>
+        </footer>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

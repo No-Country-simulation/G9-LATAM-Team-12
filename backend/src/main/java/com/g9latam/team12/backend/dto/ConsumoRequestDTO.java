@@ -42,7 +42,7 @@ public record ConsumoRequestDTO(
         @Schema(
                 description = "Tipo o clasificación del inmueble",
                 example = "Casa",
-                allowableValues = {"Casa", "Departamento"}
+                allowableValues = {"Casa", "Departamento", "Comercial"}
         )
         @NotBlank(message = "El tipo de inmueble es obligatorio")
         @JsonProperty("tipo_inmueble")

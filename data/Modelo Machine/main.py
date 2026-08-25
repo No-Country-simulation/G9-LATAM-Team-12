@@ -34,6 +34,15 @@ class InferenciaResponse(BaseModel):
     probabilidad: float
 
 
+# --- Mapeo de compatibilidad ---
+# El modelo fue entrenado con las categorías ['Apartamento', 'Casa', 'Comercial']
+# para 'tipo_inmueble', pero el frontend envía 'Departamento'. Normalizamos acá
+# para no depender de resincronizar frontend y modelo cada vez que cambie una etiqueta.
+TIPO_INMUEBLE_ALIASES = {
+    "Departamento": "Apartamento",
+}
+
+
 # --- 3. ENDPOINT DE PREDICCIÓN ---
 @app.post("/predict", response_model=InferenciaResponse)
 def predict(data: InmuebleRequest):
@@ -45,7 +54,11 @@ def predict(data: InmuebleRequest):
 
     try:
         # Convertir la petición JSON a DataFrame
-        df_input = pd.DataFrame([data.model_dump()])
+        payload = data.model_dump()
+        payload["tipo_inmueble"] = TIPO_INMUEBLE_ALIASES.get(
+            payload["tipo_inmueble"], payload["tipo_inmueble"]
+        )
+        df_input = pd.DataFrame([payload])
 
         # Feature Engineering (crear variable derivada)
         df_input["consumo_por_equipo"] = (
