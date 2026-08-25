@@ -18,5 +18,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/ubuntu/G9-LATAM-Team-12
+            git checkout deploy 
             git pull origin deploy
             docker compose up -d --build
