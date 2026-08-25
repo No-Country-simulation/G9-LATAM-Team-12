@@ -32,7 +32,27 @@ document.getElementById('form-registro')?.addEventListener('submit', async (e) =
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
     const errorMsj = document.getElementById('error-registro');
-    errorMsj.textContent = '';
+    errorMsj.innerHTML = '';
+
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = btnSubmit.textContent;
+    btnSubmit.classList.add('is-loading');
+    btnSubmit.disabled = true;
+
+    // Validación proactiva y verborrágica de la contraseña
+    const erroresPassword = [];
+    if (password.length < 8) erroresPassword.push("Tener al menos 8 caracteres de longitud.");
+    if (!/[A-Z]/.test(password)) erroresPassword.push("Incluir al menos una letra mayúscula (A-Z).");
+    if (!/[0-9]/.test(password)) erroresPassword.push("Contener al menos un número (0-9).");
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) erroresPassword.push("Incluir al menos un carácter especial (ej. @, #, $, !).");
+
+    if (erroresPassword.length > 0) {
+        errorMsj.innerHTML = `<strong>Tu contraseña no es segura. Le falta:</strong><br>• ${erroresPassword.join('<br>• ')}`;
+        btnSubmit.classList.remove('is-loading');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = textoOriginal;
+        return;
+    }
 
     try {
         const response = await fetch(`${URL_BACKEND}/auth/register`, {
@@ -42,19 +62,27 @@ document.getElementById('form-registro')?.addEventListener('submit', async (e) =
         });
 
         if (response.ok) {
-            alert('Cuenta creada con éxito. Ahora puedes iniciar sesión.');
+            alert('¡Excelente! Tu cuenta ha sido creada con éxito. Ahora puedes iniciar sesión con tus nuevas credenciales.');
             cerrarModal(document.getElementById('modal-registro'));
             abrirModal('modal-login');
         } else {
-            const data = await response.json();
-            if (data.detalles && data.detalles.length > 0) {
-                errorMsj.innerHTML = data.detalles.map(d => d.mensaje || d).join('<br>');
+            let data = {};
+            try { data = await response.json(); } catch(e) {}
+
+            if (response.status === 409 || response.status === 400) {
+                errorMsj.innerHTML = `<strong>No se pudo crear la cuenta:</strong><br>Parece que este correo (${email}) ya está registrado en nuestro sistema o los datos no son válidos. Intenta iniciar sesión o usa otro correo electrónico.`;
+            } else if (data.detalles && data.detalles.length > 0) {
+                errorMsj.innerHTML = `<strong>El sistema rechazó los datos por estos motivos:</strong><br>• ` + data.detalles.map(d => d.mensaje || d).join('<br>• ');
             } else {
-                errorMsj.textContent = data.mensaje || 'Error al registrar el usuario';
+                errorMsj.innerHTML = `<strong>Ocurrió un problema inesperado:</strong><br>${data.mensaje || 'Hubo un error del lado del servidor al intentar registrarte (Código ' + response.status + '). Inténtalo nuevamente en unos minutos.'}`;
             }
         }
     } catch (err) {
-        errorMsj.textContent = 'Error de conexión con el servidor';
+        errorMsj.innerHTML = `<strong>Problema de conexión:</strong><br>No pudimos establecer comunicación con los servidores de EnergiAI. Por favor, verifica que estés conectado a internet o inténtalo más tarde por si el sistema está en mantenimiento.`;
+    } finally {
+        btnSubmit.classList.remove('is-loading');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = textoOriginal;
     }
 });
 
@@ -63,7 +91,12 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     const errorMsj = document.getElementById('error-login');
-    errorMsj.textContent = '';
+    errorMsj.innerHTML = '';
+
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = btnSubmit.textContent;
+    btnSubmit.classList.add('is-loading');
+    btnSubmit.disabled = true;
 
     try {
         const response = await fetch(`${URL_BACKEND}/auth/login`, {
@@ -79,10 +112,18 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
             cerrarModal(document.getElementById('modal-login'));
             verificarAuthUI();
         } else {
-            errorMsj.textContent = 'Credenciales inválidas';
+            if (response.status === 401 || response.status === 403) {
+                errorMsj.innerHTML = `<strong>Acceso denegado:</strong><br>El correo o la contraseña que ingresaste son incorrectos. Verifica que no tengas activadas las mayúsculas (Bloq Mayús) y vuelve a intentarlo.`;
+            } else {
+                errorMsj.innerHTML = `<strong>Error inesperado del servidor (Código ${response.status}):</strong><br>Ocurrió un fallo temporal validando tus credenciales. Por favor, intenta acceder más tarde.`;
+            }
         }
     } catch (err) {
-        errorMsj.textContent = 'Error de conexión con el servidor';
+        errorMsj.innerHTML = `<strong>Sin conexión con el servidor de autenticación:</strong><br>Parece que estás desconectado de internet o el sistema central de EnergiAI está temporalmente fuera de línea. Revisa tu conexión de red.`;
+    } finally {
+        btnSubmit.classList.remove('is-loading');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = textoOriginal;
     }
 });
 
@@ -99,8 +140,45 @@ document.getElementById('form-consumo')?.addEventListener('submit', async (e) =>
 
     const boton = e.target.querySelector('button[type="submit"]');
     const textoOriginal = boton.textContent;
+    boton.classList.add('is-loading');
     boton.disabled = true;
-    boton.textContent = 'Analizando...';
+
+    const consumoKwh = parseFloat(document.getElementById('consumoKwh').value);
+    const tipoInmueble = document.getElementById('tipoInmueble').value;
+    const cantidadEquipos = parseInt(document.getElementById('cantidadEquipos').value, 10);
+    const horasAltoConsumo = parseFloat(document.getElementById('horasAltoConsumo').value);
+    const usoHorarioPico = document.getElementById('usoHorarioPico').checked;
+    const errorContenedor = document.getElementById('resultado-card');
+
+    // Validación verborrágica en JS para coincidir exactamente con el modelo
+    const erroresFormulario = [];
+    if (isNaN(consumoKwh) || consumoKwh <= 0) {
+        erroresFormulario.push("<strong>Consumo mensual (kWh):</strong> Debes ingresar un número mayor a 0.");
+    }
+    if (tipoInmueble !== 'Casa' && tipoInmueble !== 'Departamento') {
+        erroresFormulario.push("<strong>Tipo de inmueble:</strong> Por ahora, el sistema de Machine Learning solo está entrenado para evaluar 'Casa' o 'Departamento'. Otras opciones estarán disponibles próximamente.");
+    }
+    if (isNaN(cantidadEquipos) || cantidadEquipos < 1) {
+        erroresFormulario.push("<strong>Cantidad de equipos:</strong> Debes ingresar al menos 1 equipo de alto consumo.");
+    }
+    if (isNaN(horasAltoConsumo) || horasAltoConsumo < 0 || horasAltoConsumo > 24) {
+        erroresFormulario.push("<strong>Horas de alto consumo:</strong> Debe ser un valor realista entre 0 y 24 horas al día.");
+    }
+
+    if (erroresFormulario.length > 0) {
+        errorContenedor.innerHTML = `
+            <div class="notification is-warning is-light m-4">
+                <strong>No podemos procesar tu consulta todavía:</strong><br>
+                <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">
+                    <li>${erroresFormulario.join('</li><li>')}</li>
+                </ul>
+            </div>`;
+        goTo('resultado');
+        boton.classList.remove('is-loading');
+        boton.disabled = false;
+        boton.textContent = textoOriginal;
+        return;
+    }
 
     const datos = {
         consumo_kwh: Number(document.getElementById('consumoKwh').value),
@@ -192,10 +270,9 @@ function mostrarResultado(data) {
           <div class="cat cat-${catClass(data.categoria)}">${data.categoria}</div>
           <div class="prob">probabilidad ${(data.probabilidad*100).toFixed(0)}% · ${inmueble} · ${consumo} kWh</div>
           <ul class="rec-list">${listaRecomendaciones}</ul>
-        </div>
+        <div class="cost-card"><span class="cl">costo_estimado_mensual</span><span class="cv">${monedaSymbol} ${data.costo_estimado_mensual.toFixed(2).replace('.', ',')}</span></div>
       </div>
-      <div class="cost-card"><span class="cl">costo_estimado_mensual</span><span class="cv">R$ ${data.costo_estimado_mensual.toFixed(2).replace('.', ',')}</span></div>
-      <button class="btn btn-primary" style="width:100%; margin-top:16px;" id="btn-guardar-historial">Guardar este análisis</button>
+      <button class="button is-primary is-fullwidth mt-4" id="btn-guardar-historial">Guardar este análisis</button>
     `;
 
     document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
@@ -204,23 +281,39 @@ function mostrarResultado(data) {
 function mostrarErrores(data) {
     const contenedor = document.getElementById('resultado-card');
     if (!data || !data.detalles) {
-        contenedor.innerHTML = `<div class="empty-state" style="color:var(--red);">Ocurrió un error inesperado. Revisá los datos ingresados.</div>`;
+        contenedor.innerHTML = `
+        <div class="notification is-warning is-light m-4">
+            <strong>Ocurrió un inconveniente con los datos ingresados</strong><br>
+            El servidor no pudo procesar tu solicitud, pero no especificó el motivo exacto. Por favor, asegúrate de haber completado todos los campos del formulario con valores numéricos lógicos y vuelve a intentarlo.
+        </div>`;
         return;
     }
     const listaErrores = data.detalles
         .map(d => {
-            if (d.campo && d.mensaje) return `<li>${d.campo}: ${d.mensaje}</li>`;
+            if (d.campo && d.mensaje) return `<li><strong>${d.campo}</strong>: ${d.mensaje}</li>`;
             return `<li>${d}</li>`;
         })
         .join('');
-    contenedor.innerHTML = `<ul style="color:var(--red); padding:20px;">${listaErrores}</ul>`;
+    contenedor.innerHTML = `
+        <div class="notification is-danger is-light m-4">
+            <strong>Hemos detectado algunos errores en tu lectura:</strong><br>
+            <ul style="margin-top: 10px; margin-left: 20px; list-style-type: disc;">${listaErrores}</ul>
+            <p style="margin-top: 10px;">Por favor, corrige estos campos en la pestaña "Nueva lectura" para que podamos generar tu diagnóstico.</p>
+        </div>`;
     goTo('resultado');
 }
 
 function mostrarErrorConexion() {
     document.getElementById('resultado-card').innerHTML = `
-        <div class="empty-state" style="color:var(--red);">No se pudo conectar con el servidor. Verificá que el backend esté corriendo.</div>
-    `;
+        <div class="notification is-danger is-light m-4">
+            <strong>¡Vaya! No pudimos comunicarnos con el servidor.</strong><br>
+            <p style="margin-top: 5px;">Tu intento de enviar la lectura falló porque no hay conexión con la base de datos de EnergiAI. Esto generalmente ocurre por dos razones:</p>
+            <ul style="margin-top: 5px; margin-left: 20px; list-style-type: disc;">
+                <li>Tu conexión a internet es inestable o está caída.</li>
+                <li>Nuestros servidores de cálculo (OCI) están en mantenimiento temporal.</li>
+            </ul>
+            <p style="margin-top: 10px;">Por favor, espera unos minutos e inténtalo de nuevo.</p>
+        </div>`;
     goTo('resultado');
 }
 
@@ -339,10 +432,25 @@ const alertLog = [
     {t:'Sucursal Norte volvió a rango Eficiente', d:'hace 1 semana'}
 ];
 
+let tarifa = 0.75;
+let monedaSymbol = 'R$';
+
 function updateTariff(){
     tarifa = Number(document.getElementById('in-tarifa').value) || 0.75;
+    const monedaSelect = document.getElementById('in-moneda');
+    if (monedaSelect) {
+        monedaSymbol = monedaSelect.value.split(' ')[0];
+    }
     const display = document.getElementById('tariff-display');
-    if (display) display.textContent = 'R$ ' + tarifa.toFixed(2).replace('.', ',');
+    if (display) display.textContent = monedaSymbol + ' ' + tarifa.toFixed(2).replace('.', ',');
+
+    // Si la función renderSimulador existe, la llamamos para actualizar el simulador con la nueva moneda
+    if (typeof renderSimulador === 'function') renderSimulador();
+    // Si estamos en la pestaña historial, la recargamos para actualizar el símbolo
+    const vistaActiva = document.querySelector('.view.is-active');
+    if (vistaActiva && vistaActiva.id === 'view-historial') {
+        loadHistorialDemo();
+    }
 }
 
 function goTo(view){
@@ -435,7 +543,7 @@ function renderSimulador(){
         catEl.className = 'cat cat-' + catClass(r.cat);
     }
     const costEl = document.getElementById('sim-costo');
-    if(costEl) costEl.textContent = 'R$ ' + r.cost.toFixed(2).replace('.', ',');
+    if(costEl) costEl.textContent = monedaSymbol + ' ' + r.cost.toFixed(2).replace('.', ',');
 }
 
 async function loadHistorialDemo() {
@@ -451,7 +559,12 @@ async function loadHistorialDemo() {
         });
 
         if (!response.ok) {
-            tbody.innerHTML = '<tr><td colspan="4" style="color:var(--red);">No se pudo cargar el histórico.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4">
+                <div class="notification is-danger is-light">
+                    <strong>Error al cargar el historial</strong><br>
+                    El servidor respondió con un error (Código ${response.status}). Es posible que tu sesión haya expirado. Intenta cerrar sesión y volver a ingresar.
+                </div>
+            </td></tr>`;
             return;
         }
 
@@ -464,7 +577,7 @@ async function loadHistorialDemo() {
             const tend = data.resumen.tendencia || '--';
 
             const promEl = document.getElementById('res-promedio');
-            if(promEl) promEl.textContent = `R$ ${prom.toFixed(2).replace('.', ',')}`;
+            if(promEl) promEl.textContent = `${monedaSymbol} ${prom.toFixed(2).replace('.', ',')}`;
 
             const freqEl = document.getElementById('res-frecuente');
             if(freqEl) {
@@ -484,7 +597,12 @@ async function loadHistorialDemo() {
         }
 
         if (!data.analisis || data.analisis.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="has-text-grey">Todavía no guardaste ningún análisis.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4">
+                <div class="notification is-info is-light">
+                    <strong>Aún no tienes un historial</strong><br>
+                    Todavía no has guardado ningún análisis de consumo. Dirígete a la pestaña "Nueva lectura", ingresa tus datos y haz clic en "Guardar este análisis" para empezar a generar tu historial.
+                </div>
+            </td></tr>`;
             return;
         }
 
@@ -503,7 +621,7 @@ async function loadHistorialDemo() {
                 <td>${a.fecha.toLocaleDateString('es-AR')}</td>
                 <td>${a.consumo}</td>
                 <td><span class="tag is-${catClass(a.categoria)}">${a.categoria}</span></td>
-                <td>R$ ${a.costo.toFixed(2)}</td>
+                <td>${monedaSymbol} ${a.costo.toFixed(2)}</td>
             </tr>
         `).join('');
 
@@ -574,9 +692,15 @@ async function loadHistorialDemo() {
             }
         }
     } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--red);">Error al cargar.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4">
+            <div class="notification is-danger is-light">
+                <strong>Sin conexión al servidor</strong><br>
+                Ocurrió un problema de red al intentar descargar tus datos históricos. Verifica tu conexión a internet e inténtalo de nuevo.
+            </div>
+        </td></tr>`;
     }
 }
 
 setMode('hogar');
 renderAlertLog();
+updateTariff();
