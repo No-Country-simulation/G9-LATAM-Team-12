@@ -704,3 +704,85 @@ async function loadHistorialDemo() {
 setMode('hogar');
 renderAlertLog();
 updateTariff();
+
+/* ===== EnergiAI Lab (Showcase R&D) - Demos ===== */
+
+// MODULE 2: Simulador Fotovoltaico
+function updateSolarDemo() {
+    const slider = document.getElementById('solar-kwp');
+    if (!slider) return;
+    const kwp = parseFloat(slider.value);
+
+    const kwpValEl = document.getElementById('solar-kwp-val');
+    const ahorroEl = document.getElementById('solar-ahorro');
+    const panelesEl = document.getElementById('solar-paneles');
+
+    // Estimaciones simples para la demo (no son cálculos reales de ROI)
+    const ahorroMensual = Math.round(kwp * 1500);
+    const paneles = Math.max(1, Math.round(kwp / 0.5));
+
+    if (kwpValEl) kwpValEl.textContent = kwp.toFixed(1);
+    if (ahorroEl) ahorroEl.textContent = `$ ${ahorroMensual.toLocaleString('es-AR')} /mes`;
+    if (panelesEl) panelesEl.textContent = paneles;
+}
+
+// MODULE 3: Telemetría IoT (Smart Plugs)
+let iotDemoActive = true;
+let iotDemoInterval = null;
+
+function toggleIotDemo() {
+    const toggleEl = document.getElementById('iot-toggle');
+    const cableEl = document.getElementById('iot-cable');
+    const consumoEl = document.getElementById('iot-consumo');
+    if (!toggleEl) return;
+
+    iotDemoActive = !iotDemoActive;
+    toggleEl.classList.toggle('on', iotDemoActive);
+
+    if (iotDemoActive) {
+        if (cableEl) cableEl.style.opacity = '1';
+        if (iotDemoInterval) clearInterval(iotDemoInterval);
+        iotDemoInterval = setInterval(() => {
+            const w = Math.round(10 + Math.random() * 15);
+            if (consumoEl) consumoEl.textContent = `${w} W`;
+        }, 1500);
+    } else {
+        if (cableEl) cableEl.style.opacity = '0.2';
+        if (consumoEl) consumoEl.textContent = '0 W';
+        if (iotDemoInterval) {
+            clearInterval(iotDemoInterval);
+            iotDemoInterval = null;
+        }
+    }
+}
+
+// MODULE 1: Smart OCR Scanner
+function runOcrDemo() {
+    const laser = document.getElementById('ocr-laser');
+    const result1 = document.getElementById('ocr-result-1');
+    const result2 = document.getElementById('ocr-result-2');
+    const btn = document.getElementById('btn-demo-ocr');
+    if (!laser || !result1 || !result2 || !btn) return;
+
+    btn.disabled = true;
+    laser.classList.add('scanning');
+    result1.textContent = 'kWh: ---';
+    result2.textContent = 'Monto: ---';
+
+    setTimeout(() => {
+        const kwh = (150 + Math.random() * 200).toFixed(1);
+        const monto = Math.round(kwh * 85);
+        result1.textContent = `kWh: ${kwh}`;
+        result2.textContent = `Monto: $ ${monto.toLocaleString('es-AR')}`;
+        laser.classList.remove('scanning');
+        btn.disabled = false;
+    }, 1800);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnOcr = document.getElementById('btn-demo-ocr');
+    if (btnOcr) btnOcr.addEventListener('click', runOcrDemo);
+
+    // Inicializa el simulador solar con el valor por defecto del slider
+    updateSolarDemo();
+});
