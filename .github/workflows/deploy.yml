@@ -20,4 +20,4 @@ jobs:
             cd /home/ubuntu/G9-LATAM-Team-12
             git checkout deploy 
             git pull origin deploy
-            docker compose up -d --build
+            sudo docker compose up -d --build
