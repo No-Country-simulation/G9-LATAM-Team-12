@@ -174,8 +174,28 @@ svg.gauge { width: 230px; flex-shrink: 0; }
 
 @media screen and (max-width: 1023px) {
     #sidebar-menu > .is-flex {
-        flex-direction: column;
+        flex-direction: column !important;
         align-items: stretch !important;
         gap: 0 !important;
+        overflow-x: hidden !important;
+    }
+    #sidebar-menu .desktop-horizontal-menu {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    #sidebar-menu .desktop-horizontal-menu li {
+        display: block !important;
+        width: 100% !important;
+    }
+    #sidebar-menu .desktop-horizontal-menu a {
+        width: 100% !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid var(--bulma-border-weak) !important;
+        padding: 1.25rem 1rem !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0 !important;
     }
 }
