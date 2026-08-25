@@ -457,9 +457,30 @@ async function loadHistorialDemo() {
 
         const data = await response.json();
 
-        const resumenContainer = document.getElementById('hist-resumen');
-        if (resumenContainer && data.resumen) {
-            resumenContainer.innerHTML = `<strong>Promedio mensual:</strong> R$ ${data.resumen.promedio_costo_mensual.toFixed(2)} | <strong>Tendencia:</strong> ${data.resumen.tendencia}`;
+        // Handle Resumen Cards
+        if (data.resumen) {
+            const prom = data.resumen.promedioCostoMensual || data.resumen.promedio_costo_mensual || 0;
+            const freq = data.resumen.categoriaMasFrecuente || data.resumen.categoria_mas_frecuente || '--';
+            const tend = data.resumen.tendencia || '--';
+
+            const promEl = document.getElementById('res-promedio');
+            if(promEl) promEl.textContent = `R$ ${prom.toFixed(2).replace('.', ',')}`;
+
+            const freqEl = document.getElementById('res-frecuente');
+            if(freqEl) {
+                freqEl.textContent = freq;
+                freqEl.className = 'title is-4 ' + (freq === 'Eficiente' ? 'has-text-success' : freq === 'Moderado' ? 'has-text-warning' : 'has-text-danger');
+            }
+
+            const tendEl = document.getElementById('res-tendencia');
+            if(tendEl) {
+                let tendColor = 'has-text-white';
+                const tendLower = tend.toLowerCase();
+                if (tendLower.includes('sube') || tendLower.includes('aumento') || tendLower.includes('alza')) tendColor = 'has-text-danger';
+                if (tendLower.includes('baja') || tendLower.includes('reducción') || tendLower.includes('baja')) tendColor = 'has-text-success';
+                tendEl.textContent = tend;
+                tendEl.className = 'title is-4 ' + tendColor;
+            }
         }
 
         if (!data.analisis || data.analisis.length === 0) {
@@ -467,27 +488,90 @@ async function loadHistorialDemo() {
             return;
         }
 
-        tbody.innerHTML = data.analisis.map(a => `
-                <tr>
-                    <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
-                    <td>${a.consumo_kwh}</td>
-                    <td><span class="badge badge-${catClass(a.categoria)}">${a.categoria}</span></td>
-                    <td>R$ ${a.costo_estimado_mensual.toFixed(2)}</td>
-                </tr>
-            `).join('');
+        // Parse records safely
+        const records = data.analisis.map(a => ({
+            fecha: new Date(a.fecha),
+            consumo: a.consumoKwh || a.consumo_kwh || 0,
+            categoria: a.categoria || '--',
+            costo: a.costoEstimadoMensual || a.costo_estimado_mensual || 0
+        }));
 
-        if(histChart) histChart.destroy();
-        const ctx = document.getElementById('histChart');
-        if (ctx && window.Chart) {
-            const recent = data.analisis.slice(0, 6).reverse();
-            histChart = new Chart(ctx.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: recent.map(a => new Date(a.fecha).toLocaleDateString('es-AR', {month:'short'})),
-                    datasets: [{ data: recent.map(a => a.consumo_kwh), borderColor:'#66BB6A', backgroundColor:'rgba(102,187,106,0.1)', fill:true, tension:.35, pointRadius:3, pointBackgroundColor:'#66BB6A' }]
-                },
-                options: { plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#9BA3A0', font:{family:'IBM Plex Mono', size:11}}, grid:{color:'#313D40'}}, y:{ticks:{color:'#9BA3A0', font:{family:'IBM Plex Mono', size:11}}, grid:{color:'#313D40'}} } }
-            });
+        // Table (descending, newest first)
+        const sortedDesc = [...records].sort((a,b) => b.fecha - a.fecha);
+        tbody.innerHTML = sortedDesc.map(a => `
+            <tr>
+                <td>${a.fecha.toLocaleDateString('es-AR')}</td>
+                <td>${a.consumo}</td>
+                <td><span class="tag is-${catClass(a.categoria)}">${a.categoria}</span></td>
+                <td>R$ ${a.costo.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        if (window.Chart) {
+            Chart.defaults.color = '#9BA3A0';
+            Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+
+            // Line Chart (ascending, oldest first, max 15 points)
+            const sortedAsc = [...records].sort((a,b) => a.fecha - b.fecha).slice(-15);
+
+            if(histChart) histChart.destroy();
+            const ctxHist = document.getElementById('histChart');
+            if (ctxHist) {
+                histChart = new Chart(ctxHist.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: sortedAsc.map(a => a.fecha.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'})),
+                        datasets: [{
+                            label: 'Consumo (kWh)',
+                            data: sortedAsc.map(a => a.consumo),
+                            borderColor: '#66BB6A',
+                            backgroundColor: 'rgba(102,187,106,0.1)',
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#66BB6A'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#313D40' } },
+                            y: { grid: { color: '#313D40' }, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // Doughnut Chart
+            if(window.catChartInstance) window.catChartInstance.destroy();
+            const ctxCat = document.getElementById('catChart');
+            if (ctxCat) {
+                const counts = { 'Eficiente': 0, 'Moderado': 0, 'Ineficiente': 0 };
+                records.forEach(a => { if(counts[a.categoria] !== undefined) counts[a.categoria]++; });
+
+                window.catChartInstance = new Chart(ctxCat.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Eficiente', 'Moderado', 'Ineficiente'],
+                        datasets: [{
+                            data: [counts['Eficiente'], counts['Moderado'], counts['Ineficiente']],
+                            backgroundColor: ['#7FA06B', '#D9A441', '#BE5B4C'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }
+                        }
+                    }
+                });
+            }
         }
     } catch (err) {
         tbody.innerHTML = '<tr><td colspan="4" style="color:var(--red);">Error al cargar.</td></tr>';
