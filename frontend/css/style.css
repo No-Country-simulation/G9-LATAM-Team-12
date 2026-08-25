@@ -155,3 +155,27 @@ svg.gauge { width: 230px; flex-shrink: 0; }
     from { stroke-dashoffset: 24; }
     to { stroke-dashoffset: 0; }
 }
+
+/* --- TOP HORIZONTAL MENU (DESKTOP) --- */
+@media screen and (min-width: 1024px) {
+    .desktop-horizontal-menu {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .desktop-horizontal-menu li {
+        margin: 0;
+    }
+    .desktop-horizontal-menu a {
+        white-space: nowrap;
+    }
+}
+
+@media screen and (max-width: 1023px) {
+    #sidebar-menu > .is-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0 !important;
+    }
+}
