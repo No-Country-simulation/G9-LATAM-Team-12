@@ -432,7 +432,7 @@ const alertLog = [
     {t:'Sucursal Norte volvió a rango Eficiente', d:'hace 1 semana'}
 ];
 
-let tarifa = 0.75;
+
 let monedaSymbol = 'R$';
 
 function updateTariff(){
