@@ -78,6 +78,7 @@
             <li><a class="navitem empresa-only" data-view="ranking"><span class="pin"></span> Ranking de sedes</a></li>
             <li><a class="navitem" data-view="simulador"><span class="pin"></span> Simulador de ahorro</a></li>
             <li><a class="navitem" data-view="alertas"><span class="pin"></span> Alertas</a></li>
+            <li><a class="navitem" data-view="lab"><span class="pin"></span> EnergiAI Lab <span class="tag is-warning is-light is-rounded ml-2" style="font-size:10px; height:18px;">BETA</span></a></li>
         </ul>
         <p class="menu-label mt-4">Cuenta</p>
         <ul class="menu-list">
@@ -243,6 +244,133 @@
                 <p class="subtitle is-6 has-text-grey">Dónde está la pérdida de energía real, ordenado de más a menos eficiente.</p>
             </div>
             <div class="box" id="ranking-card"><div class="has-text-grey has-text-centered py-6">Funcionalidad a implementar (Requiere API multi-sede).</div></div>
+        </div>
+
+        <!-- ENERGIAI LAB -->
+        <div class="view" id="view-lab">
+            <div class="mb-5">
+                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">R&D / Hackathon Showcase</span>
+                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">EnergiAI Lab</h1>
+                <p class="subtitle is-6 has-text-grey">Prototipos en fase Alpha y Beta de nuestras próximas innovaciones tecnológicas para la gestión energética.</p>
+            </div>
+
+            <div class="columns is-multiline">
+
+                <!-- MODULE 1: OCR -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card alpha">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#00d1b2;">[ALPHA] Smart OCR Scanner</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Extracción de datos mediante Visión Computacional. Adiós a la carga manual de facturas de luz.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="position:relative; height:150px;">
+                            <svg width="120" height="150" viewBox="0 0 120 150">
+                                <rect x="10" y="10" width="100" height="130" fill="#242e30" stroke="#313D40" stroke-width="2" rx="4"/>
+                                <line x1="25" y1="30" x2="60" y2="30" stroke="#9BA3A0" stroke-width="4" stroke-linecap="round"/>
+                                <line x1="25" y1="45" x2="80" y2="45" stroke="#9BA3A0" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="25" y1="60" x2="95" y2="60" stroke="#9BA3A0" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="90" cy="30" r="10" fill="#313D40"/>
+
+                                <rect x="25" y="80" width="70" height="45" fill="#12181A" rx="2"/>
+                                <line x1="30" y1="90" x2="85" y2="90" stroke="#00d1b2" stroke-width="2"/>
+                                <line x1="30" y1="105" x2="70" y2="105" stroke="#00d1b2" stroke-width="2"/>
+                                <line x1="30" y1="120" x2="90" y2="120" stroke="#00d1b2" stroke-width="2"/>
+                            </svg>
+                            <div class="ocr-scanner" id="ocr-laser"></div>
+                        </div>
+
+                        <div class="is-flex is-justify-content-space-between is-align-items-center">
+                            <div>
+                                <span class="tag is-dark" id="ocr-result-1">kWh: ---</span>
+                                <span class="tag is-dark" id="ocr-result-2">Monto: ---</span>
+                            </div>
+                            <button class="button is-small is-primary is-outlined" id="btn-demo-ocr">Escanear Demo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 2: SOLAR -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card beta">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#ffdd57;">[BETA] Simulador Fotovoltaico</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Integración con APIs satelitales (Open-Meteo) para cálculo de ROI e irradiación solar.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:110px; align-items:flex-end; padding-bottom:10px;">
+                            <svg width="180" height="100" viewBox="0 0 180 100">
+                                <circle cx="30" cy="30" r="15" fill="#ffdd57" class="solar-sun"/>
+                                <path d="M 70 80 L 110 30 L 170 30 L 130 80 Z" fill="#242e30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="85" y1="80" x2="125" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="100" y1="80" x2="140" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="115" y1="80" x2="155" y2="30" stroke="#313D40" stroke-width="2"/>
+                                <line x1="80" y1="67" x2="160" y2="67" stroke="#313D40" stroke-width="2"/>
+                                <line x1="90" y1="55" x2="150" y2="55" stroke="#313D40" stroke-width="2"/>
+                                <line x1="100" y1="42" x2="140" y2="42" stroke="#313D40" stroke-width="2"/>
+                            </svg>
+                        </div>
+
+                        <label class="label is-small">Potencia Instalada: <span class="has-text-warning" id="solar-kwp-val">3.0</span> kWp</label>
+                        <input type="range" class="slider is-fullwidth is-warning mb-2" min="1" max="10" step="0.5" value="3" id="solar-kwp" oninput="updateSolarDemo()">
+                        <div class="is-flex is-justify-content-space-between mt-2">
+                            <span class="is-size-7">Ahorro est.: <b class="has-text-success" id="solar-ahorro">$ 4.500 /mes</b></span>
+                            <span class="is-size-7">Paneles: <b id="solar-paneles">6</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 3: IoT TELEMETRY -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card beta">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#00d1b2;">[BETA] Telemetría IoT (Smart Plugs)</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Detección de "Consumo Vampiro" y corte remoto vía MQTT para enchufes inteligentes.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:100px; align-items:center;">
+                            <svg width="200" height="60" viewBox="0 0 200 60">
+                                <rect x="10" y="15" width="30" height="30" rx="4" fill="#242e30" stroke="#00d1b2" stroke-width="2" id="iot-plug-rect"/>
+                                <circle cx="25" cy="30" r="4" fill="#00d1b2" id="iot-plug-led"/>
+
+                                <!-- Animación de flujo -->
+                                <path d="M 40 30 L 160 30" fill="none" stroke="#00d1b2" stroke-width="3" class="iot-flow" id="iot-cable"/>
+
+                                <rect x="160" y="10" width="30" height="40" rx="2" fill="#242e30" stroke="#313D40" stroke-width="2"/>
+                                <circle cx="175" cy="40" r="3" fill="#f14668"/>
+                            </svg>
+                        </div>
+
+                        <div class="is-flex is-justify-content-space-between is-align-items-center">
+                            <div>
+                                <div class="is-size-7">Consumo en vivo:</div>
+                                <div class="title is-4 has-text-primary m-0" id="iot-consumo" style="font-family:'IBM Plex Mono';">15 W</div>
+                            </div>
+                            <div class="switch-field mb-0" onclick="toggleIotDemo()">
+                                <label class="label is-small mb-0 mr-2" style="color:var(--bulma-text);">Flujo Activo</label>
+                                <div class="toggle on" id="iot-toggle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 4: ML PREDICTIVE -->
+                <div class="column is-6-tablet">
+                    <div class="box lab-card future">
+                        <h3 class="subtitle is-6 mb-2" style="font-family:'IBM Plex Mono'; color:#3e8ed0;">[FUTURO] Tarificación Dinámica (ML)</h3>
+                        <p class="is-size-7 mb-4 has-text-grey">Predicción horaria mediante redes neuronales. El sistema decidirá automáticamente cuándo encender el termo.</p>
+
+                        <div class="is-flex is-justify-content-center mb-4" style="height:100px; align-items:flex-end;">
+                            <svg width="200" height="90" viewBox="0 0 200 90">
+                                <path d="M 0 80 Q 25 20, 50 60 T 100 40 T 150 70 T 200 30" fill="none" stroke="#3e8ed0" stroke-width="2" stroke-dasharray="4"/>
+                                <circle cx="100" cy="40" r="5" fill="#3e8ed0"/>
+                                <text x="100" y="25" fill="#9BA3A0" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">Valle Predicho</text>
+                                <circle cx="200" cy="30" r="5" fill="#f14668"/>
+                                <text x="180" y="15" fill="#9BA3A0" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">Pico</text>
+                            </svg>
+                        </div>
+
+                        <div class="is-flex is-justify-content-center">
+                            <span class="tag is-info is-light"><i class="fas fa-brain mr-2"></i> Modelo en fase de entrenamiento</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <!-- SIMULADOR -->
@@ -462,5 +590,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="js/app.js"></script></body>
+<script src="js/app.js"></script>
+</body>
 </html>
