@@ -3,426 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EnergiAI — Panel</title>
+    <title>EnergiAI — Inteligencia para el Consumo Energético</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        html{scroll-behavior:smooth;}
+        .display{font-family:'Big Shoulders Display', sans-serif; text-transform:uppercase; letter-spacing:0.01em;}
+        .mono{font-family:'IBM Plex Mono', monospace;}
+
+        /* Hero specific */
+        .eyebrow {
+            display:inline-flex; align-items:center; gap:8px;
+            font-family:'IBM Plex Mono'; font-size:12px; color:var(--color-primario-bright);
+            border:1px solid var(--bulma-border); background:var(--bulma-scheme-main-bis);
+            padding:6px 12px; border-radius:100px; margin-bottom:22px;
+        }
+        .eyebrow .dot { width:6px; height:6px; border-radius:50%; background:var(--color-primario); animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+        .hero-stats { display:flex; gap:26px; margin-top:36px; flex-wrap:wrap; }
+        .hero-stats .stat { border-left:2px solid var(--color-primario); padding-left:12px; }
+        .hero-stats .stat b { display:block; font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text); }
+        .hero-stats .stat span { font-size:11.5px; color:var(--bulma-text-weak); font-family:'IBM Plex Mono'; }
+
+        /* Meter Unit (Hero) */
+        .meter-unit {
+            background: var(--bulma-scheme-main-bis);
+            border: 1px solid var(--bulma-border);
+            border-radius: 10px;
+            padding: 26px 26px 22px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 20px 50px -20px rgba(0,0,0,0.6);
+        }
+        .meter-unit .meter-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+        .meter-unit .meter-head .label { font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); letter-spacing:0.08em; text-transform:uppercase; }
+        .meter-unit .meter-head .plate { font-family:'IBM Plex Mono'; font-size:10px; color:var(--bulma-text-weak); opacity:.6; }
+        .readout-row { display:flex; align-items:flex-end; justify-content:space-between; margin-top:6px; gap:14px; flex-wrap:wrap; }
+        .odometer { display:flex; gap:3px; background:#0D1113; border:1px solid var(--bulma-border); border-radius:4px; padding:6px 8px; }
+        .odometer .digit {
+            font-family:'IBM Plex Mono'; font-weight:600; font-size:22px; color:var(--color-primario-bright);
+            background:#0A0D0E; width:20px; text-align:center; border-radius:2px;
+        }
+        .odometer-wrap { display:flex; flex-direction:column; gap:4px; }
+        .odometer-wrap .u { font-family:'IBM Plex Mono'; font-size:10px; color:var(--bulma-text-weak); }
+        .cat-block { text-align:right; }
+        .cat-block .cat { font-family:'Big Shoulders Display'; font-weight:800; font-size:26px; }
+        .cat-block .prob { font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); }
+
+        /* Section specifics */
+        .section-tag { font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--color-primario-bright); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; display:block; }
+        .need-col { padding: 28px 30px; }
+        .need-col.problem { background: var(--bulma-scheme-main-bis); border-right: 1px solid var(--bulma-border); }
+        .need-col.response { background: var(--bulma-scheme-main-ter); }
+        @media (max-width: 768px) { .need-col.problem { border-right: none; border-bottom: 1px solid var(--bulma-border); } }
+
+        /* Pipeline */
+        .pipeline-track { position: relative; }
+        .pipeline-track::before {
+            content:""; position:absolute; top:34px; left:8%; right:8%; height:2px;
+            background:repeating-linear-gradient(90deg, var(--color-primario) 0 10px, transparent 10px 16px);
+            z-index:0;
+        }
+        @media(max-width:768px){ .pipeline-track::before{display:none;} }
+        .node { position:relative; z-index:1; padding:0 18px; }
+        .node .pin {
+            width:16px; height:16px; border-radius:50%; background:var(--bulma-scheme-main);
+            border:2px solid var(--color-primario); margin-bottom:16px;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .node .pin::after { content:""; width:6px;height:6px;border-radius:50%; background:var(--color-primario-bright); }
+        .node ul { list-style:none; display:flex; flex-direction:column; gap:6px; margin-left:0; margin-top:10px; }
+        .node li { font-size:13.5px; color:var(--bulma-text-weak); padding-left:14px; position:relative; }
+        .node li::before { content:"—"; position:absolute; left:0; color:var(--color-primario); }
+
+        /* Demo */
+        .field-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--bulma-border); font-size:13.5px; }
+        .field-row span:first-child { color:var(--bulma-text-weak); font-family:'IBM Plex Mono'; font-size:12px; }
+        .field-row span:last-child { font-weight:600; }
+
+        /* Stack & Edge */
+        .breaker { background: var(--bulma-scheme-main-bis); border: 1px solid var(--bulma-border); border-radius: 6px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+        .breaker .led { width: 8px; height: 8px; border-radius: 50%; background: #7FA06B; box-shadow: 0 0 6px #7FA06B; flex-shrink: 0; }
+        .edge-item { border: 1px solid var(--bulma-border); border-left: 3px solid var(--color-primario); border-radius: 4px; background: var(--bulma-scheme-main-bis); padding: 18px 20px; height: 100%; }
+
+        @media (prefers-reduced-motion: reduce){ .needle{transition:none;} .eyebrow .dot{animation:none;} }
+    </style>
 </head>
-<body style="overflow-y: hidden;">
+<body>
 
-<!-- TOPBAR -->
-<nav class="navbar" style="border-bottom: 1px solid var(--bulma-border-weak);">
-    <div class="navbar-brand">
-        <a class="navbar-item" href="#">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="38" height="38" style="margin-right: 6px;">
-                <style>
-                    .glow { fill: #FFEB3B; opacity: 0.55; }
-                    .glass { fill: #FFEB3B; stroke: #F9A825; stroke-width: 2; }
-                    .filament { stroke: #E65100; stroke-width: 2; fill: none; stroke-linecap: round; }
-                    .base { fill: #9E9E9E; }
-                    .cap { fill: #757575; }
-                    .stem { stroke: #2E7D32; stroke-width: 4; stroke-linecap: round; }
-                    .leaf { fill: #43A047; stroke: #1B5E20; stroke-width: 1; }
-                    .soil { fill: #795548; }
-                </style>
-                <line class="stem" x1="50" y1="88" x2="50" y2="65" />
-                <path class="leaf" d="M50 86 C39 83 33 75 30 66 C43 68 50 75 50 86 Z" />
-                <path class="leaf" d="M50 80 C61 77 67 70 70 63 C58 65 50 70 50 80 Z" />
-                <path class="soil" d="M28 96 Q34 88 42 95 Q50 87 58 95 Q66 88 72 96 Z" />
-                <circle class="glass" cx="50" cy="32" r="20.8" />
-                <path class="filament" d="M41 26 C41 21 46 21 46 26 C46 31 54 31 54 26 C54 21 59 21 59 26" transform="translate(0,4)" />
-                <rect class="base" x="42" y="51" width="16" height="5.2" rx="1.5" />
-                <rect class="base" x="42" y="56.2" width="16" height="5.2" rx="1.5" />
-                <rect class="cap" x="43.5" y="61.4" width="13" height="6.5" rx="1.5" />
-            </svg>
-            <span class="ml-2 has-text-weight-bold is-size-5" style="font-family:'Big Shoulders Display';">EnergiAI</span>
-        </a>
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="sidebar-menu">
-            <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
-        </a>
-    </div>
-
-    <div class="navbar-menu" id="nav-menu-top">
-        <div class="navbar-start">
-            <div class="navbar-item">
-                <div class="buttons has-addons">
-                    <button id="mode-hogar" class="button is-small is-primary" onclick="setMode('hogar')">Hogar</button>
-                    <button id="mode-empresa" class="button is-small" onclick="setMode('empresa')">Empresa</button>
-                </div>
-            </div>
+<nav class="navbar is-fixed-top" style="background:rgba(18,24,26,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--bulma-border);">
+    <div class="container px-4 is-max-widescreen">
+        <div class="navbar-brand">
+            <a class="navbar-item is-flex is-align-items-center" href="#">
+                <div class="bolt" style="width:10px;height:10px;border-radius:50%;background:var(--color-primario); box-shadow:0 0 8px var(--color-primario); margin-right:10px;"></div>
+                <span class="has-text-weight-bold is-size-5" style="font-family:'Big Shoulders Display'; letter-spacing:0.03em;">EnergiAI</span>
+                <span class="is-hidden-mobile ml-2 pl-2" style="font-family:'IBM Plex Mono'; font-size:11px; color:var(--bulma-text-weak); border-left:1px solid var(--bulma-border);">G9 · LATAM TEAM 12</span>
+            </a>
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="landing-navbar">
+                <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+            </a>
         </div>
-        <div class="navbar-end">
-            <div id="menu-invitado" class="navbar-item">
-                <div class="buttons">
-                    <button class="button is-light" data-target="modal-registro">Registrarse</button>
-                    <button class="button is-primary" data-target="modal-login">Ingresar</button>
+        <div class="navbar-menu" id="landing-navbar">
+            <div class="navbar-end" style="font-size:13px; font-family:'Inter';">
+                <a class="navbar-item" href="#como-funciona">Cómo funciona</a>
+                <a class="navbar-item" href="#demo">Demo</a>
+                <a class="navbar-item" href="#stack">Stack</a>
+                <a class="navbar-item" href="#destacamos">Por qué destacamos</a>
+                <div class="navbar-item">
+                    <a href="dashboard.html" class="button is-primary is-small" style="font-family:'IBM Plex Mono';">Ir al Panel</a>
                 </div>
-            </div>
-            <div class="item-usuario is-hidden navbar-item">
-                <span id="user-email-display" class="has-text-weight-bold has-text-primary mr-3" style="font-family:'IBM Plex Mono'; font-size:13px;"></span>
-                <button class="button is-danger is-light is-small" id="btn-logout">Salir</button>
             </div>
         </div>
     </div>
 </nav>
 
-<div class="columns is-gapless" id="main-container" style="height: calc(100vh - 3.5rem);">
-
-    <!-- SIDEBAR -->
-    <aside class="column is-2-desktop is-3-tablet is-hidden-touch menu" id="sidebar-menu" style="border-right: 1px solid var(--bulma-border-weak); padding: 1rem; background-color: var(--bulma-scheme-main-bis); overflow-y: auto;">
-        <ul class="menu-list">
-            <li><a class="navitem is-active" data-view="lectura"><span class="pin"></span> Nueva lectura</a></li>
-            <li><a class="navitem" data-view="resultado"><span class="pin"></span> Resultado</a></li>
-            <li><a class="navitem" data-view="historial"><span class="pin"></span> Historial</a></li>
-            <li><a class="navitem empresa-only" data-view="ranking"><span class="pin"></span> Ranking de sedes</a></li>
-            <li><a class="navitem" data-view="simulador"><span class="pin"></span> Simulador de ahorro</a></li>
-            <li><a class="navitem" data-view="alertas"><span class="pin"></span> Alertas</a></li>
-        </ul>
-        <p class="menu-label mt-4">Cuenta</p>
-        <ul class="menu-list">
-            <li><a class="navitem" data-view="config"><span class="pin"></span> Configuración</a></li>
-        </ul>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <div class="column main-content-column" style="overflow-y: auto; padding: 2rem;">
-
-        <!-- NUEVA LECTURA -->
-        <div class="view is-active" id="view-lectura">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">POST /analisis-energetico</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Nueva lectura de consumo</h1>
-                <p class="subtitle is-6 has-text-grey">Ingresá los datos del período a analizar. El modelo devuelve la clasificación, las recomendaciones y el costo estimado.</p>
-            </div>
-
-            <div class="box">
-                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">DATOS DE CONSUMO</h3>
-                <form id="form-consumo">
-                    <div class="columns is-multiline">
-                        <div class="column is-6-tablet">
-                            <div class="field">
-                                <label class="label is-small">Consumo mensual (kWh)</label>
-                                <div class="control">
-                                    <input class="input" type="number" id="consumoKwh" step="0.1" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="column is-6-tablet">
-                            <div class="field">
-                                <label class="label is-small">Tipo de inmueble</label>
-                                <div class="control">
-                                    <div class="select is-fullwidth">
-                                        <select id="tipoInmueble" required>
-                                            <option value="">Seleccionar...</option>
-                                            <option value="Casa">Casa</option>
-                                            <option value="Departamento">Departamento</option>
-                                            <option value="Oficina">Oficina</option>
-                                            <option value="Local comercial">Local comercial</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="column is-6-tablet">
-                            <div class="field">
-                                <label class="label is-small">Cantidad de equipos</label>
-                                <div class="control">
-                                    <input class="input" type="number" id="cantidadEquipos" min="1" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="column is-6-tablet">
-                            <div class="field">
-                                <label class="label is-small">Horas de alto consumo / día</label>
-                                <div class="control">
-                                    <input class="input" type="number" id="horasAltoConsumo" min="0" max="24" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="column is-12">
-                            <div class="switch-field">
-                                <label class="label is-small mb-0" style="color:var(--bulma-text);">Uso en horario pico</label>
-                                <div class="toggle" id="toggle-pico" onclick="this.classList.toggle('on'); document.getElementById('usoHorarioPico').checked = this.classList.contains('on');"></div>
-                                <input type="checkbox" id="usoHorarioPico" style="display:none;">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control mt-5">
-                        <button class="button is-primary" type="submit">Analizar consumo</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="box item-usuario is-hidden mt-4">
-                <h3 class="subtitle is-6 mb-3" style="font-family:'IBM Plex Mono';">CARGA MASIVA (MÚLTIPLES SEDES)</h3>
-                <div class="dropzone" data-target="modal-csv">
-                    Clic aquí para abrir el panel y subir un archivo <b class="has-text-primary">.csv</b>
+<section class="section mt-6">
+    <div class="container px-4 is-max-widescreen">
+        <div class="columns is-vcentered is-variable is-8">
+            <div class="column is-6">
+                <div class="eyebrow"><span class="dot"></span> API EN PRODUCCIÓN · OCI AMPERE A1</div>
+                <h1 class="title" style="font-size:3.5rem; line-height:0.98; font-weight:800; font-family:'Big Shoulders Display';">Cada kilowatt<br>cuenta una <span class="has-text-primary">historia.</span></h1>
+                <p class="subtitle is-5 has-text-grey mt-4 mb-5">EnergiAI lee el patrón de consumo eléctrico de un hogar u organización y devuelve, en segundos, un diagnóstico accionable: perfil de eficiencia, recomendaciones concretas y el impacto real en la factura.</p>
+                <div class="buttons">
+                    <a href="#demo" class="button is-primary" style="font-family:'IBM Plex Mono'; font-weight:600;">Ver demo interactiva</a>
+                    <a href="#destacamos" class="button is-light is-outlined" style="font-family:'IBM Plex Mono';">Por qué destacamos</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat"><b>3</b><span>PERFILES CLASIFICADOS</span></div>
+                    <div class="stat"><b>HTTPS</b><span>DOMINIO PROPIO</span></div>
+                    <div class="stat"><b>MySQL</b><span>HEATWAVE EN OCI</span></div>
+                    <div class="stat"><b>JWT</b><span>AUTH + HISTORIAL</span></div>
                 </div>
             </div>
-        </div>
 
-        <!-- RESULTADO -->
-        <div class="view" id="view-resultado">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Diagnóstico</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Resultado del análisis</h1>
-                <p class="subtitle is-6 has-text-grey">Clasificación del perfil energético con probabilidad, recomendaciones puntuales y el impacto estimado en la factura.</p>
-            </div>
-            <div class="box" id="resultado-card">
-                <div class="has-text-grey has-text-centered py-6">Todavía no cargaste una lectura. Andá a "Nueva lectura" para generar un resultado.</div>
-            </div>
-        </div>
-
-        <!-- HISTORIAL -->
-        <div class="view" id="view-historial">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Seguimiento</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Historial de consumo</h1>
-                <p class="subtitle is-6 has-text-grey">Evolución mes a mes. Sirve para confirmar si un cambio de hábito realmente impactó en el consumo.</p>
-                <p id="hist-resumen" class="has-text-primary" style="font-family:'IBM Plex Mono'; font-size:13px; margin-top:8px;"></p>
-            </div>
-            <div class="box">
-                <canvas id="histChart" height="90"></canvas>
-            </div>
-            <div class="box">
-                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGISTROS</h3>
-                <div class="table-container">
-                    <table class="table is-fullwidth is-hoverable" id="hist-table">
-                        <thead><tr><th>Fecha</th><th>kWh</th><th>Categoría</th><th>Costo estimado</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- RANKING -->
-        <div class="view" id="view-ranking">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Comparación entre sedes</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Ranking de eficiencia</h1>
-                <p class="subtitle is-6 has-text-grey">Dónde está la pérdida de energía real, ordenado de más a menos eficiente.</p>
-            </div>
-            <div class="box" id="ranking-card"><div class="has-text-grey has-text-centered py-6">Funcionalidad a implementar (Requiere API multi-sede).</div></div>
-        </div>
-
-        <!-- SIMULADOR -->
-        <div class="view" id="view-simulador">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">¿Qué pasa si...?</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Simulador de ahorro</h1>
-                <p class="subtitle is-6 has-text-grey">Movés los controles y ves en vivo cómo cambiaría la clasificación y el costo si ajustás el uso.</p>
-            </div>
-            <div class="columns is-multiline">
-                <div class="column is-6-tablet">
-                    <div class="box">
-                        <div class="field mb-5">
-                            <div class="is-flex is-justify-content-space-between mb-2" style="font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--bulma-text-weak);">
-                                <span>Cantidad de equipos</span><b class="has-text-white" id="sim-equipos-val">10</b>
-                            </div>
-                            <input class="slider is-fullwidth" type="range" id="sim-equipos" min="1" max="20" value="10" oninput="renderSimulador()" style="width:100%; accent-color:var(--bulma-primary);">
-                        </div>
-                        <div class="field mb-5">
-                            <div class="is-flex is-justify-content-space-between mb-2" style="font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--bulma-text-weak);">
-                                <span>Horas de alto consumo / día</span><b class="has-text-white" id="sim-horas-val">8</b>
-                            </div>
-                            <input class="slider is-fullwidth" type="range" id="sim-horas" min="0" max="12" value="8" oninput="renderSimulador()" style="width:100%; accent-color:var(--bulma-primary);">
-                        </div>
-                        <div class="switch-field">
-                            <label class="label is-small mb-0" style="color:var(--bulma-text);">Uso en horario pico</label>
-                            <div class="toggle on" id="sim-pico" onclick="this.classList.toggle('on'); renderSimulador();"></div>
-                        </div>
+            <div class="column is-6">
+                <div class="meter-unit">
+                    <div class="meter-head">
+                        <span class="label">Medidor · POST /analisis-energetico</span>
+                        <span class="plate">MOD. EA-01</span>
                     </div>
-                </div>
-                <div class="column is-6-tablet">
-                    <div class="box">
-                        <div class="gauge-row">
-                            <svg class="gauge" viewBox="0 0 300 190">
-                                <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22"/>
-                                <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22"/>
-                                <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22"/>
-                                <g class="needle" id="sim-needle" style="transform:rotate(-90deg);">
-                                    <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
-                                    <circle cx="150" cy="150" r="8" fill="#EDE7D9"/><circle cx="150" cy="150" r="3" fill="#12181A"/>
-                                </g>
-                            </svg>
-                            <div class="gauge-meta">
-                                <div class="cat" id="sim-cat">—</div>
-                                <div class="cost-card" style="margin-top:10px;"><span class="cl mr-4" style="font-family:'IBM Plex Mono'; font-size:11px;">costo estimado</span><span class="cv" id="sim-costo">—</span></div>
+                    <svg id="gauge-hero" class="gauge" viewBox="0 0 300 190" style="width:100%;">
+                        <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22" stroke-linecap="butt"/>
+                        <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22" stroke-linecap="butt"/>
+                        <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22" stroke-linecap="butt"/>
+                        <text x="34" y="172" class="zone-label" fill="var(--bulma-text-weak)">EFICIENTE</text>
+                        <text x="122" y="30" class="zone-label" fill="var(--bulma-text-weak)">MODERADO</text>
+                        <text x="215" y="172" class="zone-label" fill="var(--bulma-text-weak)">INEFICIENTE</text>
+                        <g class="needle" id="needle-hero" style="transform:rotate(-90deg);">
+                            <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+                            <circle cx="150" cy="150" r="8" fill="#EDE7D9"/>
+                            <circle cx="150" cy="150" r="3" fill="#12181A"/>
+                        </g>
+                    </svg>
+                    <div class="readout-row">
+                        <div class="odometer-wrap">
+                            <div class="odometer" id="odometer-hero">
+                                <div class="digit">4</div><div class="digit">2</div><div class="digit">0</div>
                             </div>
+                            <span class="u">kWh / mes</span>
+                        </div>
+                        <div class="cat-block">
+                            <div class="cat cat-ineficiente" id="cat-hero">Ineficiente</div>
+                            <div class="prob" id="prob-hero">probabilidad 0.81</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- ALERTAS -->
-        <div class="view" id="view-alertas">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Monitoreo continuo</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Alertas de alto consumo</h1>
-                <p class="subtitle is-6 has-text-grey">Reglas que avisan cuando una lectura se sale de rango, sin tener que revisar manualmente.</p>
-            </div>
-            <div class="box">
-                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGLAS ACTIVAS</h3>
-                <div class="is-flex is-justify-content-space-between is-align-items-center py-3" style="border-bottom:1px solid var(--bulma-border-weak);">
-                    <div><div class="is-size-6">Consumo mensual &gt; 400 kWh</div><div class="is-size-7 has-text-grey">Aviso cuando cualquier lectura supera el umbral</div></div>
-                    <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-                </div>
-                <div class="is-flex is-justify-content-space-between is-align-items-center py-3" style="border-bottom:1px solid var(--bulma-border-weak);">
-                    <div><div class="is-size-6">Clasificación "Ineficiente" dos meses seguidos</div><div class="is-size-7 has-text-grey">Detecta un problema persistente, no un pico aislado</div></div>
-                    <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-                </div>
-                <div class="is-flex is-justify-content-space-between is-align-items-center py-3 empresa-only" style="border-bottom:1px solid var(--bulma-border-weak);">
-                    <div><div class="is-size-6">Sede fuera del promedio de la red</div><div class="is-size-7 has-text-grey">Compara cada sede contra el resto de las sedes registradas</div></div>
-                    <div class="toggle" onclick="this.classList.toggle('on')"></div>
-                </div>
-            </div>
-            <div class="box">
-                <h3 class="subtitle is-6 mb-4" style="font-family:'IBM Plex Mono';">REGISTRO RECIENTE</h3>
-                <div id="alert-log"></div>
-            </div>
-        </div>
-
-        <!-- CONFIG -->
-        <div class="view" id="view-config">
-            <div class="mb-5">
-                <span class="tag is-primary is-light is-rounded mb-2" style="font-family:'IBM Plex Mono'; font-size:11px;">Cuenta</span>
-                <h1 class="title is-3" style="font-family:'Big Shoulders Display'; font-weight:800;">Configuración</h1>
-                <p class="subtitle is-6 has-text-grey">Ajustá la tarifa de referencia — todos los cálculos de costo la usan en tiempo real.</p>
-            </div>
-            <div class="box">
-                <div class="columns is-multiline">
-                    <div class="column is-6-tablet">
-                        <div class="field">
-                            <label class="label is-small">Tarifa de referencia (por kWh)</label>
-                            <div class="control">
-                                <input class="input" type="number" step="0.01" id="in-tarifa" value="0.75" onchange="updateTariff()">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="column is-6-tablet">
-                        <div class="field">
-                            <label class="label is-small">Moneda</label>
-                            <div class="control">
-                                <div class="select is-fullwidth">
-                                    <select id="in-moneda"><option>R$ (Real)</option><option>$ (Peso)</option><option>US$ (Dólar)</option></select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4"><span class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Tarifa actual: <b class="has-text-white" id="tariff-display">R$ 0,75</b></span></div>
-            </div>
-        </div>
-
     </div>
-</div>
+</section>
 
-<!-- MODALS -->
-
-<!-- Modal: Login -->
-<div class="modal" id="modal-login">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Ingresar</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <form id="form-login">
-                <div class="field">
-                    <label class="label is-small">Email</label>
-                    <div class="control">
-                        <input class="input" type="email" id="login-email" required>
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label is-small">Contraseña</label>
-                    <div class="control">
-                        <input class="input" type="password" id="login-password" required>
-                    </div>
-                </div>
-                <p id="error-login" class="help is-danger"></p>
-                <div class="control mt-5">
-                    <button class="button is-primary is-fullwidth" type="submit">Ingresar</button>
-                </div>
-            </form>
-        </section>
+<section class="section pt-0">
+    <div class="container px-4 is-max-widescreen">
+        <div class="columns is-gapless box p-0 is-clipped m-0" style="border:1px solid var(--bulma-border); background:transparent;">
+            <div class="column is-6 need-col problem">
+                <h3 class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">El problema</h3>
+                <p class="has-text-grey-light is-size-6">Las facturas eléctricas suben, pero casi nadie sabe qué hábito específico las infla: ¿el horario de uso, la cantidad de equipos, el tipo de vivienda? Sin esa visibilidad, no hay forma de decidir qué cambiar.</p>
+            </div>
+            <div class="column is-6 need-col response">
+                <h3 class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Nuestra respuesta</h3>
+                <p class="has-text-grey-light is-size-6">Un modelo entrenado clasifica el perfil energético en Eficiente, Moderado o Ineficiente, explica por qué con recomendaciones puntuales y traduce todo a un costo mensual estimado, en una sola llamada de API.</p>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<!-- Modal: Registro -->
-<div class="modal" id="modal-registro">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Crear Cuenta</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <form id="form-registro">
-                <div class="field">
-                    <label class="label is-small">Email</label>
-                    <div class="control">
-                        <input class="input" type="email" id="reg-email" required>
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label is-small">Contraseña</label>
-                    <div class="control">
-                        <input class="input" type="password" id="reg-password" required>
-                    </div>
-                </div>
-                <p id="error-registro" class="help is-danger"></p>
-                <div class="control mt-5">
-                    <button class="button is-primary is-fullwidth" type="submit">Registrarme</button>
-                </div>
-            </form>
-        </section>
+<section id="como-funciona" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-6" style="max-width:60ch;">
+            <span class="section-tag">Arquitectura</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">De la lectura del medidor a la recomendación</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">Tres etapas conectadas, cada una con una responsabilidad clara — el mismo recorrido que sigue un dato real dentro del sistema.</p>
+        </div>
+        <div class="pipeline-track columns mt-5">
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">01 — Ciencia de datos</h4>
+                <ul>
+                    <li>EDA y limpieza sobre datos simulados/reales</li>
+                    <li>Regresión Logística y Random Forest</li>
+                    <li>Modelo serializado, servido vía FastAPI</li>
+                </ul>
+            </div>
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">02 — Backend API</h4>
+                <ul>
+                    <li>Spring Boot 4.1 + Java 21, con TDD</li>
+                    <li>Validación de entrada y manejo de errores</li>
+                    <li>Auth JWT, historial e import CSV masivo</li>
+                </ul>
+            </div>
+            <div class="column is-4 node">
+                <div class="pin"></div>
+                <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">03 — OCI</h4>
+                <ul>
+                    <li>Compute Ampere A1 (ARM), Docker Compose</li>
+                    <li>MySQL HeatWave para persistencia</li>
+                    <li>HTTPS propio vía Nginx + Let's Encrypt</li>
+                </ul>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<!-- Modal: Subir CSV -->
-<div class="modal" id="modal-csv">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title" style="font-family:'Big Shoulders Display'; font-weight:800;">Subir archivo .csv</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <div class="field">
-                <div class="file has-name is-fullwidth">
-                    <label class="file-label">
-                        <input class="file-input" type="file" id="input-csv" accept=".csv">
-                        <span class="file-cta">
-                    <span class="file-label">Elegir archivo…</span>
-                </span>
-                        <span class="file-name" id="csv-hint">Ningún archivo seleccionado</span>
-                    </label>
+<section id="demo" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5" style="max-width:60ch;">
+            <span class="section-tag">Demo</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">Probá los tres perfiles</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">Misma API, tres lecturas de consumo distintas. Elegí un escenario para ver cómo cambia el diagnóstico.</p>
+        </div>
+
+        <div class="buttons mb-5">
+            <button class="button is-small scenario-btn" data-scenario="eficiente" style="font-family:'IBM Plex Mono';">Eficiente</button>
+            <button class="button is-small scenario-btn" data-scenario="moderado" style="font-family:'IBM Plex Mono';">Moderado</button>
+            <button class="button is-small is-primary is-outlined scenario-btn is-active" data-scenario="ineficiente" style="font-family:'IBM Plex Mono';">Ineficiente</button>
+        </div>
+
+        <div class="box p-5" style="background:var(--bulma-scheme-main-bis);">
+            <div class="columns is-variable is-6">
+                <div class="column is-6">
+                    <div class="is-size-7 has-text-grey mb-3" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:.08em;">Entrada · consumo reportado</div>
+                    <div class="field-row"><span>consumo_kwh</span><span class="has-text-white" id="f-consumo">420</span></div>
+                    <div class="field-row"><span>uso_horario_pico</span><span class="has-text-white" id="f-pico">true</span></div>
+                    <div class="field-row"><span>cantidad_equipos</span><span class="has-text-white" id="f-equipos">10</span></div>
+                    <div class="field-row"><span>tipo_inmueble</span><span class="has-text-white" id="f-inmueble">Casa</span></div>
+                    <div class="field-row"><span>horas_alto_consumo</span><span class="has-text-white" id="f-horas">8</span></div>
+                </div>
+                <div class="column is-6">
+                    <div class="is-size-7 has-text-grey mb-4" style="font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:.08em;">Salida · diagnóstico</div>
+                    <div class="is-flex is-align-items-center mb-4">
+                        <svg class="gauge" viewBox="0 0 300 190" style="max-width:200px;">
+                            <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22"/>
+                            <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22"/>
+                            <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22"/>
+                            <g class="needle" id="needle-demo" style="transform:rotate(63deg);">
+                                <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+                                <circle cx="150" cy="150" r="8" fill="#EDE7D9"/>
+                                <circle cx="150" cy="150" r="3" fill="#12181A"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <ul class="rec-list m-0" id="rec-list">
+                        <li>Reducir el uso de equipos durante horarios pico</li>
+                        <li>Evaluar aparatos con alto consumo energético</li>
+                        <li>Distribuir actividades de mayor consumo a lo largo del día</li>
+                    </ul>
+                    <div class="cost-card mt-4">
+                        <span class="cl">costo_estimado_mensual</span>
+                        <span class="cv" id="f-costo">R$ 315,00</span>
+                    </div>
                 </div>
             </div>
-            <div class="help mt-4">
-                <p class="mb-2">El archivo CSV debe incluir las siguientes columnas:</p>
-                <div class="tags">
-                    <span class="tag">fecha</span>
-                    <span class="tag">consumo_kwh</span>
-                    <span class="tag">uso_horario_pico</span>
-                    <span class="tag">cantidad_equipos</span>
-                    <span class="tag">tipo_inmueble</span>
-                    <span class="tag">horas_alto_consumo</span>
+        </div>
+    </div>
+</section>
+
+<section id="stack" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5">
+            <span class="section-tag">Panel de control</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">Stack técnico</h2>
+        </div>
+        <div class="columns is-multiline is-mobile">
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Java 21 + Spring Boot 4.1</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">FastAPI · modelo ML</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Python · Scikit-Learn</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">MySQL HeatWave (OCI)</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">OCI Compute Ampere A1</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Docker Compose</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Nginx + Let's Encrypt</span></div></div>
+            <div class="column is-6-mobile is-3-tablet"><div class="breaker"><div class="led"></div><span style="font-family:'IBM Plex Mono'; font-size:12px;">Swagger / OpenAPI</span></div></div>
+        </div>
+    </div>
+</section>
+
+<section id="destacamos" class="section">
+    <div class="container px-4 is-max-widescreen">
+        <div class="mb-5" style="max-width:60ch;">
+            <span class="section-tag">Diferencial frente a otros equipos</span>
+            <h2 class="title is-2" style="font-family:'Big Shoulders Display'; font-weight:800;">No es un notebook. Es un sistema desplegado.</h2>
+            <p class="subtitle is-6 mt-3 has-text-grey">La consigna es la misma para todos los equipos del hackathon — esto es lo que hicimos con ella.</p>
+        </div>
+        <div class="columns is-multiline">
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">API en producción, no una demo local</h4>
+                    <p class="mt-2 has-text-grey">HTTPS con dominio propio (appenergia.duckdns.org), corriendo 24/7 sobre OCI Compute Ampere A1.</p>
                 </div>
             </div>
-        </section>
-        <footer class="modal-card-foot is-justify-content-flex-end">
-            <button class="button is-light btn-cancel">Cancelar</button>
-            <button class="button is-primary" id="btn-confirmar-csv" disabled>Subir</button>
-        </footer>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Persistencia real</h4>
+                    <p class="mt-2 has-text-grey">Migración completa a MySQL HeatWave en OCI, con historial de análisis consultable, no solo la respuesta puntual del endpoint.</p>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Seguridad desde el diseño</h4>
+                    <p class="mt-2 has-text-grey">Autenticación JWT y Spring Security protegiendo los endpoints, construido con TDD desde el primer commit.</p>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="edge-item">
+                    <h4 style="font-family:'Big Shoulders Display'; font-size:22px; font-weight:700; color:var(--bulma-text);">Operable a escala</h4>
+                    <p class="mt-2 has-text-grey">Importación masiva por CSV para analizar múltiples lecturas de consumo en una sola carga, no solo un registro a la vez.</p>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<script src="js/app.js"></script>
+<footer class="footer mt-6" style="background:var(--bulma-scheme-main-bis); border-top:1px solid var(--bulma-border); padding:3rem 1.5rem;">
+    <div class="container px-4 is-max-widescreen is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap" style="gap:1rem;">
+        <div class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">EnergiAI — Sostenibilidad, Energía y Hogares Inteligentes</div>
+        <div class="is-size-7 has-text-grey" style="font-family:'IBM Plex Mono';">Equipo G9-LATAM-Team-12 · <a href="https://appenergia.duckdns.org" target="_blank" rel="noopener" class="has-text-primary">appenergia.duckdns.org</a></div>
+    </div>
+</footer>
+
+<script>
+    // Navbar toggle
+    document.addEventListener('DOMContentLoaded', () => {
+        const burger = document.querySelector('.navbar-burger');
+        if (burger) {
+            burger.addEventListener('click', () => {
+                const target = document.getElementById(burger.dataset.target);
+                burger.classList.toggle('is-active');
+                if (target) target.classList.toggle('is-active');
+            });
+        }
+    });
+
+    const scenarios = {
+        eficiente: {
+            consumo: 180, pico: 'false', equipos: 4, inmueble: 'Apartamento', horas: 2,
+            categoria: 'Eficiente', prob: 0.88, costo: 135.00, percent: 0.15,
+            recs: [
+                'Mantener los hábitos actuales fuera del horario pico',
+                'Seguir monitoreando el consumo mensual',
+                'Evaluar migrar los equipos restantes a modelos de bajo consumo'
+            ]
+        },
+        moderado: {
+            consumo: 290, pico: 'true', equipos: 7, inmueble: 'Casa', horas: 5,
+            categoria: 'Moderado', prob: 0.74, costo: 217.50, percent: 0.5,
+            recs: [
+                'Redistribuir el uso de equipos fuera del horario pico',
+                'Revisar el consumo en standby de los electrodomésticos',
+                'Evaluar el aislamiento térmico para reducir climatización'
+            ]
+        },
+        ineficiente: {
+            consumo: 420, pico: 'true', equipos: 10, inmueble: 'Casa', horas: 8,
+            categoria: 'Ineficiente', prob: 0.81, costo: 315.00, percent: 0.85,
+            recs: [
+                'Reducir el uso de equipos durante horarios pico',
+                'Evaluar aparatos con alto consumo energético',
+                'Distribuir actividades de mayor consumo a lo largo del día'
+            ]
+        }
+    };
+
+    function angleFor(percent){ return -90 + percent * 180; }
+    function catClass(cat){
+        return cat === 'Eficiente' ? 'cat-eficiente' : cat === 'Moderado' ? 'cat-moderado' : 'cat-ineficiente';
+    }
+    function digitsFor(n){
+        return String(n).split('').map(d => `<div class="digit">${d}</div>`).join('');
+    }
+
+    function applyScenario(key, animateHero){
+        const s = scenarios[key];
+
+        document.getElementById('needle-demo').style.transform = `rotate(${angleFor(s.percent)}deg)`;
+        document.getElementById('f-consumo').textContent = s.consumo;
+        document.getElementById('f-pico').textContent = s.pico;
+        document.getElementById('f-equipos').textContent = s.equipos;
+        document.getElementById('f-inmueble').textContent = s.inmueble;
+        document.getElementById('f-horas').textContent = s.horas;
+        document.getElementById('f-costo').textContent = 'R$ ' + s.costo.toFixed(2).replace('.', ',');
+        document.getElementById('rec-list').innerHTML = s.recs.map(r => `<li>${r}</li>`).join('');
+
+        document.querySelectorAll('.scenario-btn').forEach(b => {
+            b.classList.remove('is-active', 'is-primary', 'is-outlined');
+            if (b.dataset.scenario === key) {
+                b.classList.add('is-active', 'is-primary', 'is-outlined');
+            }
+        });
+
+        if(animateHero){
+            document.getElementById('needle-hero').style.transform = `rotate(${angleFor(s.percent)}deg)`;
+            document.getElementById('odometer-hero').innerHTML = digitsFor(s.consumo);
+            const catEl = document.getElementById('cat-hero');
+            catEl.textContent = s.categoria;
+            catEl.className = 'cat ' + catClass(s.categoria);
+            document.getElementById('prob-hero').textContent = 'probabilidad ' + s.prob.toFixed(2);
+        }
+    }
+
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyScenario(btn.dataset.scenario, true));
+    });
+
+    window.addEventListener('load', () => {
+        document.getElementById('needle-hero').style.transform = 'rotate(-90deg)';
+        document.getElementById('needle-demo').style.transform = 'rotate(-90deg)';
+        setTimeout(() => applyScenario('ineficiente', true), 150);
+    });
+</script>
+
 </body>
 </html>
