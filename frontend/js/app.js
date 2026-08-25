@@ -1,336 +1,32 @@
-document.getElementById('form-consumo').addEventListener('submit', async (e) => {
-    e.preventDefault(); // evita que la página se recargue (comportamiento por defecto del form)
-
-    const boton = e.target.querySelector('button[type="submit"]');
-    const textoOriginal = boton.textContent;
-
-    // Deshabilitamos el botón y cambiamos el texto mientras esperamos la respuesta
-    boton.disabled = true;
-    boton.textContent = 'Analizando...';
-
-    const datos = {
-        consumo_kwh: Number(document.getElementById('consumoKwh').value),
-        uso_horario_pico: document.getElementById('usoHorarioPico').checked,
-        cantidad_equipos: Number(document.getElementById('cantidadEquipos').value),
-        tipo_inmueble: document.getElementById('tipoInmueble').value,
-        horas_alto_consumo: Number(document.getElementById('horasAltoConsumo').value)
-    };
-
-    try {
-        // Construir los headers con el Token si existe ---
-        const token = localStorage.getItem(TOKEN_KEY); // Usamos la constante definida abajo
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const response = await fetch(`${URL_BACKEND}/analisis-energetico`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(datos)
-        });
-
-        //Validar si no tiene permisos (Token expirado o no enviado) ---
-        if (response.status === 403 || response.status === 401) {
-            mostrarErrores({ detalles: ["Debes iniciar sesión para realizar un análisis"] });
-            abrirModal('modal-login'); // Le abrimos el modal automáticamente
-            return;
-        }
-
-
-        let data;
-        try {   // Intentamos leer el body de la respuesta como JSON.
-            data = await response.json();
-            console.log("Respuesta completa:", data);
-            console.log("Costo:", data.costo_estimado_mensual);
-        } catch {   // Si falla, dejamos "data" en null en vez de que el programa se rompa.
-            data = null;
-        }
-
-        if (!response.ok || !data) { // evitamos que mostrarResultado() reciba algo inválido.
-            mostrarErrores(data);
-            return;
-        }
-
-        mostrarResultado(data);
-
-        ultimoAnalisis = {
-            consumo_kwh: datos.consumo_kwh,
-            categoria: data.categoria,
-            probabilidad: data.probabilidad,
-            costo_estimado_mensual: data.costo_estimado_mensual
-        };
-
-    } catch (error) {   // Este catch atrapa errores de red
-        console.error('Error de conexión:', error);
-        mostrarErrorConexion();
-    } finally { // Restauramos el botón a su estado original
-        boton.disabled = false;
-        boton.textContent = textoOriginal;
-    }
-});
-
-
-let graficoActual = null;   // guardamos referencia para poder destruirlo y evitar duplicados
-let ultimoAnalisis = null;  // guarda el último análisis mostrado, para poder guardarlo en el histórico
-
-//  caso feliz, HTTP 200
-function mostrarResultado(data) {
-    // Convertimos el array de recomendaciones en una lista HTML
-    const listaRecomendaciones = data.recomendaciones
-        .map(r => `<li>${r}</li>`)
-        .join('');
-
-    document.getElementById('resultado').innerHTML = `
-        <h3 class="title is-5">Categoría: ${data.categoria}</h3>
-        <p>Probabilidad: ${(data.probabilidad * 100).toFixed(0)}%</p>
-        <p>Costo estimado mensual: R$ ${data.costo_estimado_mensual.toFixed(2)}</p>
-        <h4 class="title is-6 mt-3">Recomendaciones:</h4>
-        <ul>${listaRecomendaciones}</ul>
-        <button class="button is-link is-fullwidth mt-3" id="btn-guardar-historial">Guardar este análisis</button>
-    `;
-
-    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
-    dibujarGrafico(data);
-}
-
-function dibujarGrafico(data) {
-    const ctx = document.getElementById('grafico-probabilidad');
-
-    if (graficoActual) {
-        graficoActual.destroy();
-    }
-
-    const color = obtenerColorPorCategoria(data.categoria);
-
-    graficoActual = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Probabilidad', 'Resto'],
-            datasets: [{
-                data: [data.probabilidad * 100, 100 - data.probabilidad * 100],
-                backgroundColor: [color, '#e0e0e0']
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-}
-
-//  Indicador visual tipo semáforo según la categoría
-function obtenerColorPorCategoria(categoria) {
-    switch (categoria) {
-        case 'Eficiente':
-            return '#008000';
-        case 'Moderado':
-            return '#FF7800';
-        case 'Ineficiente':
-            return '#FF0000';
-        default:
-            return '#9E9E9E';   // por si llega algo inesperado
-    }
-}
-
-//  HTTP 400 con el formato que arma TratadorDeErrores en el backend
-function mostrarErrores(data) {
-    const contenedor = document.getElementById('resultado');
-
-    if (!data || !data.detalles) {
-        contenedor.innerHTML = `<p class="error">Ocurrió un error inesperado. Revisá los datos ingresados.</p>`;
-        return;
-    }
-
-    const listaErrores = data.detalles
-        .map(d => {
-            if (d.campo && d.mensaje) {
-                return `<li>${d.campo}: ${d.mensaje}</li>`;
-            }
-            return `<li>${d}</li>`;
-        })
-        .join('');
-
-    contenedor.innerHTML = `<ul class="error-lista">${listaErrores}</ul>`;
-}
-
-//  Muestra un mensaje cuando falla la conexión misma
-function mostrarErrorConexion() {
-    document.getElementById('resultado').innerHTML = `
-        <p class="error">No se pudo conectar con el servidor. Verificá que el backend esté corriendo.</p>
-    `;
-}
-
-
-/* ===================== Navbar burger (menú mobile) ===================== */
-document.addEventListener('DOMContentLoaded', () => {
-    // Seleccionamos todos los botones hamburguesa
-    const burgers = document.querySelectorAll('.navbar-burger');
-
-    burgers.forEach(burger => {
-        burger.addEventListener('click', () => {
-            // Buscamos el menú al que hace referencia el data-target ("navbar-menu")
-            const targetId = burger.dataset.target;
-            const target = document.getElementById(targetId);
-
-            // Alternamos la clase 'is-active' para mostrar/ocultar
-            burger.classList.toggle('is-active');
-            if (target) {
-                target.classList.toggle('is-active');
-            }
-        });
-    });
-});
-
-
-/* ===================== Modales (histórico / usuarios / csv) ===================== */
-async function abrirModal(id) {
-    document.getElementById(id)?.classList.add('is-active');
-    if (id === 'modal-historico') {
-        await cargarHistorial();
-    }
-}
-
-async function cargarHistorial() {
-    const contenedor = document.querySelector('#modal-historico .modal-card-body');
-    contenedor.innerHTML = '<p>Cargando...</p>';
-
-    const token = localStorage.getItem(TOKEN_KEY);
-    const response = await fetch(`${URL_BACKEND}/historial`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-        contenedor.innerHTML = '<p class="error">No se pudo cargar el histórico.</p>';
-        return;
-    }
-
-    const data = await response.json();
-    if (data.analisis.length === 0) {
-        contenedor.innerHTML = '<p class="has-text-grey">Todavía no guardaste ningún análisis.</p>';
-        return;
-    }
-
-    const filas = data.analisis.map(a => `
-        <tr>
-            <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
-            <td>${a.consumo_kwh} kWh</td>
-            <td>${a.categoria}</td>
-            <td>R$ ${a.costo_estimado_mensual.toFixed(2)}</td>
-        </tr>
-    `).join('');
-
-    contenedor.innerHTML = `
-        <p><strong>Promedio mensual:</strong> R$ ${data.resumen.promedio_costo_mensual.toFixed(2)}
-           | <strong>Tendencia:</strong> ${data.resumen.tendencia}</p>
-        <table class="table is-fullwidth is-striped">
-            <thead><tr><th>Fecha</th><th>Consumo</th><th>Categoría</th><th>Costo</th></tr></thead>
-            <tbody>${filas}</tbody>
-        </table>
-    `;
-}
-function cerrarModal(modal) {
-    modal.classList.remove('is-active');
-}
-
-document.querySelectorAll('[data-target]').forEach(disparador => {
-    // el navbar-burger también usa data-target, pero ya tiene su propio listener arriba
-    if (disparador.classList.contains('navbar-burger')) return;
-
-    disparador.addEventListener('click', (e) => {
-        e.preventDefault();
-        abrirModal(disparador.dataset.target);
-    });
-});
-
-document.querySelectorAll('.modal').forEach(modal => {
-    const cerrar = () => cerrarModal(modal);
-    modal.querySelector('.modal-background')?.addEventListener('click', cerrar);
-    modal.querySelector('.delete')?.addEventListener('click', cerrar);
-    modal.querySelector('.modal-card-foot .button:not(.is-primary)')?.addEventListener('click', cerrar);
-});
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal.is-active').forEach(cerrarModal);
-    }
-});
-
-
-/* ===================== Selector de archivo CSV ===================== */
-const inputCsv = document.getElementById('input-csv');
-const nombreCsv = document.getElementById('nombre-csv');
-const btnConfirmarCsv = document.getElementById('btn-confirmar-csv');
-
-inputCsv?.addEventListener('change', () => {
-    const archivo = inputCsv.files[0];
-    nombreCsv.textContent = archivo ? archivo.name : 'Ningún archivo seleccionado';
-    btnConfirmarCsv.disabled = !archivo;
-});
-
-btnConfirmarCsv?.addEventListener('click', () => {
-    // TODO: conectar con el endpoint del backend cuando esté definido
-    // (por ejemplo, POST /analisis-energetico/importar con FormData)
-    console.log('Archivo listo para subir:', inputCsv.files[0]);
-});
-
-
-/* ===================== Modo oscuro ===================== */
-const CLAVE_TEMA = 'energiai-tema';
-const botonTema = document.getElementById('toggle-tema');
-const iconoTema = document.getElementById('icono-tema');
-
-function aplicarTema(tema) {
-    document.documentElement.setAttribute('data-theme', tema);
-    iconoTema.textContent = tema === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem(CLAVE_TEMA, tema);
-}
-
-// Preferencia guardada > preferencia del sistema > claro por defecto
-const temaGuardado = localStorage.getItem(CLAVE_TEMA);
-const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
-aplicarTema(temaGuardado || (prefiereOscuro ? 'dark' : 'light'));
-
-botonTema?.addEventListener('click', () => {
-    const temaActual = document.documentElement.getAttribute('data-theme');
-    aplicarTema(temaActual === 'dark' ? 'light' : 'dark');
-});
-
-/* ===================== Lógica de Autenticación (JWT) ===================== */
 const URL_BACKEND = `${window.location.origin}/api`;
 const TOKEN_KEY = 'energiaI_token';
 const EMAIL_KEY = 'energiaI_email';
 
+let histChart = null;
+let ultimoAnalisis = null;
+let tarifa = 0.75;
+let mode = 'hogar';
+
+// --- AUTH LOGIC ---
 function verificarAuthUI() {
     const token = localStorage.getItem(TOKEN_KEY);
     const email = localStorage.getItem(EMAIL_KEY);
 
     const menuInvitado = document.getElementById('menu-invitado');
-    const itemsUsuario = document.querySelectorAll('.item-usuario'); // Selecciona todos los enlaces del usuario
+    const itemsUsuario = document.querySelectorAll('.item-usuario');
 
     if (token) {
-        // Ocultamos el menú de Login/Registro
         if (menuInvitado) menuInvitado.classList.add('is-hidden');
-
-        // Mostramos todas las opciones del usuario
         itemsUsuario.forEach(item => item.classList.remove('is-hidden'));
-
-        // Colocamos el email en la barra
         const displayEmail = document.getElementById('user-email-display');
         if (displayEmail) displayEmail.textContent = email;
     } else {
-        // Mostramos el menú de Login/Registro
         if (menuInvitado) menuInvitado.classList.remove('is-hidden');
-
-        // Ocultamos todas las opciones del usuario
         itemsUsuario.forEach(item => item.classList.add('is-hidden'));
     }
 }
-// Ejecutar al cargar la página
 document.addEventListener('DOMContentLoaded', verificarAuthUI);
 
-// Manejar Registro
 document.getElementById('form-registro')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('reg-email').value;
@@ -351,9 +47,7 @@ document.getElementById('form-registro')?.addEventListener('submit', async (e) =
             abrirModal('modal-login');
         } else {
             const data = await response.json();
-            // Verificamos si el backend envió una lista de errores de validación (detalles)
             if (data.detalles && data.detalles.length > 0) {
-                // Extraemos los mensajes (ej: "La contraseña debe tener mínimo 8 caracteres")
                 errorMsj.innerHTML = data.detalles.map(d => d.mensaje || d).join('<br>');
             } else {
                 errorMsj.textContent = data.mensaje || 'Error al registrar el usuario';
@@ -364,7 +58,6 @@ document.getElementById('form-registro')?.addEventListener('submit', async (e) =
     }
 });
 
-// Manejar Login
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -381,10 +74,8 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
 
         if (response.ok) {
             const data = await response.json();
-            // Guardamos el token y el email en localStorage
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(EMAIL_KEY, data.email);
-
             cerrarModal(document.getElementById('modal-login'));
             verificarAuthUI();
         } else {
@@ -395,15 +86,143 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Manejar Cierre de sesión (Logout)
 document.getElementById('btn-logout')?.addEventListener('click', () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     verificarAuthUI();
-    // Limpiamos los resultados de análisis si cerramos sesión
-    document.getElementById('resultado').innerHTML = '';
-    if(graficoActual) graficoActual.destroy();
+    document.getElementById('resultado-card').innerHTML = `<div class="empty-state">Todavía no cargaste una lectura. Andá a "Nueva lectura" para generar un resultado.</div>`;
 });
+
+// --- SUBMIT LECTURA ---
+document.getElementById('form-consumo')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const boton = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = 'Analizando...';
+
+    const datos = {
+        consumo_kwh: Number(document.getElementById('consumoKwh').value),
+        uso_horario_pico: document.getElementById('usoHorarioPico').checked,
+        cantidad_equipos: Number(document.getElementById('cantidadEquipos').value),
+        tipo_inmueble: document.getElementById('tipoInmueble').value,
+        horas_alto_consumo: Number(document.getElementById('horasAltoConsumo').value)
+    };
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${URL_BACKEND}/analisis-energetico`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(datos)
+        });
+
+        if (response.status === 403 || response.status === 401) {
+            mostrarErrores({ detalles: ["Debes iniciar sesión para realizar un análisis"] });
+            abrirModal('modal-login');
+            return;
+        }
+
+        let data;
+        try {
+            data = await response.json();
+        } catch {
+            data = null;
+        }
+
+        if (!response.ok || !data) {
+            mostrarErrores(data);
+            return;
+        }
+
+        mostrarResultado(data);
+        ultimoAnalisis = {
+            consumo_kwh: datos.consumo_kwh,
+            categoria: data.categoria,
+            probabilidad: data.probabilidad,
+            costo_estimado_mensual: data.costo_estimado_mensual
+        };
+
+        goTo('resultado');
+
+    } catch (error) {
+        console.error('Error de conexión:', error);
+        mostrarErrorConexion();
+    } finally {
+        boton.disabled = false;
+        boton.textContent = textoOriginal;
+    }
+});
+
+// --- RENDER RESULTADO (DEMO STYLE) ---
+function catClass(cat){ return cat==='Eficiente'?'Eficiente':cat==='Moderado'?'Moderado':'Ineficiente'; }
+function percentFor(cat){ return cat==='Eficiente'?0.15:cat==='Moderado'?0.5:0.85; }
+function angleFor(p){ return -90 + p*180; }
+
+function gaugeSvg(percent, cat){
+    return `<svg class="gauge" viewBox="0 0 300 190">
+      <path d="M 30 150 A 120 120 0 0 1 90 46.08" fill="none" stroke="#7FA06B" stroke-width="22"/>
+      <path d="M 90 46.08 A 120 120 0 0 1 210 46.08" fill="none" stroke="#D9A441" stroke-width="22"/>
+      <path d="M 210 46.08 A 120 120 0 0 1 270 150" fill="none" stroke="#BE5B4C" stroke-width="22"/>
+      <g class="needle" style="transform:rotate(${angleFor(percent)}deg);">
+        <line x1="150" y1="150" x2="150" y2="38" stroke="#EDE7D9" stroke-width="3"/>
+        <circle cx="150" cy="150" r="8" fill="#EDE7D9"/><circle cx="150" cy="150" r="3" fill="#12181A"/>
+      </g></svg>`;
+}
+
+function mostrarResultado(data) {
+    const percent = percentFor(data.categoria);
+    const inmueble = document.getElementById('tipoInmueble').value || 'Inmueble';
+    const consumo = document.getElementById('consumoKwh').value || '0';
+
+    const listaRecomendaciones = (data.recomendaciones || [])
+        .map(r => `<li>${r}</li>`)
+        .join('');
+
+    document.getElementById('resultado-card').innerHTML = `
+      <div class="gauge-row">
+        ${gaugeSvg(percent, data.categoria)}
+        <div class="gauge-meta">
+          <div class="cat cat-${catClass(data.categoria)}">${data.categoria}</div>
+          <div class="prob">probabilidad ${(data.probabilidad*100).toFixed(0)}% · ${inmueble} · ${consumo} kWh</div>
+          <ul class="rec-list">${listaRecomendaciones}</ul>
+        </div>
+      </div>
+      <div class="cost-card"><span class="cl">costo_estimado_mensual</span><span class="cv">R$ ${data.costo_estimado_mensual.toFixed(2).replace('.', ',')}</span></div>
+      <button class="btn btn-primary" style="width:100%; margin-top:16px;" id="btn-guardar-historial">Guardar este análisis</button>
+    `;
+
+    document.getElementById('btn-guardar-historial').addEventListener('click', guardarEnHistorial);
+}
+
+function mostrarErrores(data) {
+    const contenedor = document.getElementById('resultado-card');
+    if (!data || !data.detalles) {
+        contenedor.innerHTML = `<div class="empty-state" style="color:var(--red);">Ocurrió un error inesperado. Revisá los datos ingresados.</div>`;
+        return;
+    }
+    const listaErrores = data.detalles
+        .map(d => {
+            if (d.campo && d.mensaje) return `<li>${d.campo}: ${d.mensaje}</li>`;
+            return `<li>${d}</li>`;
+        })
+        .join('');
+    contenedor.innerHTML = `<ul style="color:var(--red); padding:20px;">${listaErrores}</ul>`;
+    goTo('resultado');
+}
+
+function mostrarErrorConexion() {
+    document.getElementById('resultado-card').innerHTML = `
+        <div class="empty-state" style="color:var(--red);">No se pudo conectar con el servidor. Verificá que el backend esté corriendo.</div>
+    `;
+    goTo('resultado');
+}
 
 async function guardarEnHistorial() {
     const boton = document.getElementById('btn-guardar-historial');
@@ -430,15 +249,58 @@ async function guardarEnHistorial() {
     }
 }
 
+// --- MODALS ---
+function abrirModal(id) {
+    document.getElementById(id)?.classList.add('is-active');
+}
+function cerrarModal(modal) {
+    modal.classList.remove('is-active');
+}
+
+document.querySelectorAll('[data-target]').forEach(disparador => {
+    disparador.addEventListener('click', (e) => {
+        e.preventDefault();
+        abrirModal(disparador.dataset.target);
+    });
+});
+document.querySelectorAll('.modal').forEach(modal => {
+    const cerrar = () => cerrarModal(modal);
+    modal.querySelector('.modal-background')?.addEventListener('click', cerrar);
+    modal.querySelector('.delete')?.addEventListener('click', cerrar);
+    modal.querySelector('.btn-cancel')?.addEventListener('click', (e) => { e.preventDefault(); cerrar(); });
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.is-active').forEach(cerrarModal);
+    }
+});
+
+// --- CSV UPLOAD ---
+const inputCsv = document.getElementById('input-csv');
+const btnConfirmarCsv = document.getElementById('btn-confirmar-csv');
+inputCsv?.addEventListener('change', () => {
+    const archivo = inputCsv.files[0];
+    if (archivo) {
+        btnConfirmarCsv.disabled = false;
+        document.getElementById('csv-hint').textContent = `Seleccionado: ${archivo.name}`;
+    } else {
+        btnConfirmarCsv.disabled = true;
+    }
+});
 btnConfirmarCsv?.addEventListener('click', async () => {
     const archivo = inputCsv.files[0];
     if (!archivo) return;
-
     const textoOriginal = btnConfirmarCsv.textContent;
     btnConfirmarCsv.disabled = true;
     btnConfirmarCsv.textContent = 'Importando...';
 
-    const resultadoDiv = document.getElementById('resultado-csv') || crearContenedorResultadoCsv();
+    let resultadoDiv = document.getElementById('resultado-csv');
+    if (!resultadoDiv) {
+        resultadoDiv = document.createElement('div');
+        resultadoDiv.id = 'resultado-csv';
+        resultadoDiv.className = 'hint mt-4';
+        btnConfirmarCsv.insertAdjacentElement('afterend', resultadoDiv);
+    }
 
     try {
         const token = localStorage.getItem(TOKEN_KEY);
@@ -447,35 +309,190 @@ btnConfirmarCsv?.addEventListener('click', async () => {
 
         const response = await fetch(`${URL_BACKEND}/historial/importar`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }, // sin Content-Type: el browser lo arma con el boundary
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
 
         const data = await response.json();
-
         if (!response.ok) {
-            resultadoDiv.innerHTML = `<p class="error">Error al importar el archivo.</p>`;
+            resultadoDiv.innerHTML = `<span style="color:var(--red);">Error al importar el archivo.</span>`;
             return;
         }
 
-        const listaErrores = data.errores.map(e => `<li>Fila ${e.fila}: ${e.motivo}</li>`).join('');
+        const listaErrores = data.errores ? data.errores.map(e => `<li>Fila ${e.fila}: ${e.motivo}</li>`).join('') : '';
         resultadoDiv.innerHTML = `
-            <p><strong>${data.filas_exitosas}</strong> de <strong>${data.filas_procesadas}</strong> filas importadas correctamente.</p>
-            ${data.filas_con_error > 0 ? `<p class="has-text-danger">${data.filas_con_error} filas con error:</p><ul>${listaErrores}</ul>` : ''}
+            ${data.filas_exitosas} de ${data.filas_procesadas} filas importadas correctamente.
+            ${data.filas_con_error > 0 ? `<div class="has-text-danger">Filas con error:<ul>${listaErrores}</ul></div>` : ''}
         `;
-
     } catch (error) {
-        resultadoDiv.innerHTML = `<p class="error">No se pudo conectar con el servidor.</p>`;
+        resultadoDiv.innerHTML = `<span style="color:var(--red);">No se pudo conectar con el servidor.</span>`;
     } finally {
         btnConfirmarCsv.disabled = false;
         btnConfirmarCsv.textContent = textoOriginal;
     }
 });
 
-function crearContenedorResultadoCsv() {
-    const div = document.createElement('div');
-    div.id = 'resultado-csv';
-    div.className = 'mt-3';
-    btnConfirmarCsv.insertAdjacentElement('afterend', div);
-    return div;
+// --- DEMO VIEWS & INTERACTIONS ---
+const alertLog = [
+    {t:'Sucursal Sur superó 400 kWh en el mes de Julio', d:'hace 3 días'},
+    {t:'Casa Matriz clasificada como Ineficiente dos meses seguidos', d:'hace 5 días'},
+    {t:'Sucursal Norte volvió a rango Eficiente', d:'hace 1 semana'}
+];
+
+function updateTariff(){
+    tarifa = Number(document.getElementById('in-tarifa').value) || 0.75;
+    const display = document.getElementById('tariff-display');
+    if (display) display.textContent = 'R$ ' + tarifa.toFixed(2).replace('.', ',');
 }
+
+function goTo(view){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('is-active'));
+    document.querySelectorAll('.navitem').forEach(n => n.classList.remove('is-active'));
+    const targetView = document.getElementById('view-' + view);
+    if(targetView) targetView.classList.add('is-active');
+    const targetNav = document.querySelector(`.navitem[data-view="${view}"]`);
+    if(targetNav) targetNav.classList.add('is-active');
+
+    // Si estamos en mobile, cerrar el sidebar al hacer click
+    const sidebar = document.getElementById('sidebar-menu');
+    if (sidebar && sidebar.classList.contains('is-active')) {
+        sidebar.classList.remove('is-active');
+        document.querySelector('.navbar-burger').classList.remove('is-active');
+    }
+
+    if(view === 'historial') loadHistorialDemo();
+}
+
+function setMode(m){
+    mode = m;
+
+    // Quitar primary style al botón inactivo y ponérselo al activo
+    const btnHogar = document.getElementById('mode-hogar');
+    const btnEmpresa = document.getElementById('mode-empresa');
+
+    if(m === 'hogar'){
+        if(btnHogar) btnHogar.classList.add('is-primary');
+        if(btnEmpresa) btnEmpresa.classList.remove('is-primary');
+    } else {
+        if(btnHogar) btnHogar.classList.remove('is-primary');
+        if(btnEmpresa) btnEmpresa.classList.add('is-primary');
+    }
+
+    document.querySelectorAll('.empresa-only').forEach(el => el.classList.toggle('is-hidden', m !== 'empresa'));
+    const rankingView = document.getElementById('view-ranking');
+    if(m === 'hogar' && rankingView && rankingView.classList.contains('is-active')) goTo('lectura');
+}
+
+document.querySelectorAll('.navitem').forEach(n => n.addEventListener('click', () => goTo(n.dataset.view)));
+
+// Navbar Burger Logic for Mobile
+document.addEventListener('DOMContentLoaded', () => {
+    const burger = document.querySelector('.navbar-burger');
+    if (burger) {
+        burger.addEventListener('click', () => {
+            const target = document.getElementById(burger.dataset.target);
+            burger.classList.toggle('is-active');
+            if (target) {
+                target.classList.toggle('is-active'); // Sidebar
+                target.classList.toggle('is-hidden-touch');
+            }
+            // Also toggle top nav menu on mobile
+            const topMenu = document.getElementById('nav-menu-top');
+            if(topMenu) topMenu.classList.toggle('is-active');
+        });
+    }
+});
+
+function renderAlertLog(){
+    const logEl = document.getElementById('alert-log');
+    if (logEl) logEl.innerHTML = alertLog.map(a => `<div class="log-item"><div class="dot"></div><div><div class="lt">${a.t}</div><div class="ld">${a.d}</div></div></div>`).join('');
+}
+
+function categorizeSim(consumo, pico, horas, equipos){
+    const base = consumo + (pico?50:0) + horas*10 + equipos*5;
+    let cat = base < 300 ? 'Eficiente' : base < 550 ? 'Moderado' : 'Ineficiente';
+    let prob = cat==='Eficiente' ? 0.86 : cat==='Moderado' ? 0.73 : 0.81;
+    return {cat, prob, cost: consumo * tarifa, base};
+}
+
+function renderSimulador(){
+    const equipos = Number(document.getElementById('sim-equipos').value);
+    const horas = Number(document.getElementById('sim-horas').value);
+    const pico = document.getElementById('sim-pico').classList.contains('on');
+    document.getElementById('sim-equipos-val').textContent = equipos;
+    document.getElementById('sim-horas-val').textContent = horas;
+
+    const consumoBase = 420;
+    const r = categorizeSim(consumoBase, pico, horas, equipos);
+    const percent = percentFor(r.cat);
+
+    const needle = document.getElementById('sim-needle');
+    if(needle) needle.style.transform = `rotate(${angleFor(percent)}deg)`;
+
+    const catEl = document.getElementById('sim-cat');
+    if (catEl) {
+        catEl.textContent = r.cat;
+        catEl.className = 'cat cat-' + catClass(r.cat);
+    }
+    const costEl = document.getElementById('sim-costo');
+    if(costEl) costEl.textContent = 'R$ ' + r.cost.toFixed(2).replace('.', ',');
+}
+
+async function loadHistorialDemo() {
+    const tbody = document.querySelector('#hist-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+
+    try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const response = await fetch(`${URL_BACKEND}/historial`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:var(--red);">No se pudo cargar el histórico.</td></tr>';
+            return;
+        }
+
+        const data = await response.json();
+
+        const resumenContainer = document.getElementById('hist-resumen');
+        if (resumenContainer && data.resumen) {
+            resumenContainer.innerHTML = `<strong>Promedio mensual:</strong> R$ ${data.resumen.promedio_costo_mensual.toFixed(2)} | <strong>Tendencia:</strong> ${data.resumen.tendencia}`;
+        }
+
+        if (!data.analisis || data.analisis.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="has-text-grey">Todavía no guardaste ningún análisis.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.analisis.map(a => `
+                <tr>
+                    <td>${new Date(a.fecha).toLocaleDateString('es-AR')}</td>
+                    <td>${a.consumo_kwh}</td>
+                    <td><span class="badge badge-${catClass(a.categoria)}">${a.categoria}</span></td>
+                    <td>R$ ${a.costo_estimado_mensual.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+        if(histChart) histChart.destroy();
+        const ctx = document.getElementById('histChart');
+        if (ctx && window.Chart) {
+            const recent = data.analisis.slice(0, 6).reverse();
+            histChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: recent.map(a => new Date(a.fecha).toLocaleDateString('es-AR', {month:'short'})),
+                    datasets: [{ data: recent.map(a => a.consumo_kwh), borderColor:'#66BB6A', backgroundColor:'rgba(102,187,106,0.1)', fill:true, tension:.35, pointRadius:3, pointBackgroundColor:'#66BB6A' }]
+                },
+                options: { plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#9BA3A0', font:{family:'IBM Plex Mono', size:11}}, grid:{color:'#313D40'}}, y:{ticks:{color:'#9BA3A0', font:{family:'IBM Plex Mono', size:11}}, grid:{color:'#313D40'}} } }
+            });
+        }
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--red);">Error al cargar.</td></tr>';
+    }
+}
+
+setMode('hogar');
+renderAlertLog();
