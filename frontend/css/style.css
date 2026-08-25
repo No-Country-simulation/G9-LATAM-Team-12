@@ -117,7 +117,8 @@ svg.gauge { width: 230px; flex-shrink: 0; }
     background-color: #00d1b2;
     box-shadow: 0 0 10px #00d1b2;
     top: 25px;
-    left: 15px;
+    left: 50%;
+    transform: translateX(-50%);
     opacity: 0;
 }
 .ocr-scanner.scanning {
