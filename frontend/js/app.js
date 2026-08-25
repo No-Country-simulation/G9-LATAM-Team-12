@@ -155,8 +155,8 @@ document.getElementById('form-consumo')?.addEventListener('submit', async (e) =>
     if (isNaN(consumoKwh) || consumoKwh <= 0) {
         erroresFormulario.push("<strong>Consumo mensual (kWh):</strong> Debes ingresar un número mayor a 0.");
     }
-    if (tipoInmueble !== 'Casa' && tipoInmueble !== 'Departamento') {
-        erroresFormulario.push("<strong>Tipo de inmueble:</strong> Por ahora, el sistema de Machine Learning solo está entrenado para evaluar 'Casa' o 'Departamento'. Otras opciones estarán disponibles próximamente.");
+    if (tipoInmueble !== 'Casa' && tipoInmueble !== 'Departamento' && tipoInmueble !== 'Comercial') {
+        erroresFormulario.push("<strong>Tipo de inmueble:</strong> Por ahora, el sistema de Machine Learning solo está entrenado para evaluar 'Casa', 'Departamento' o 'Comercial'. Otras opciones estarán disponibles próximamente.");
     }
     if (isNaN(cantidadEquipos) || cantidadEquipos < 1) {
         erroresFormulario.push("<strong>Cantidad de equipos:</strong> Debes ingresar al menos 1 equipo de alto consumo.");

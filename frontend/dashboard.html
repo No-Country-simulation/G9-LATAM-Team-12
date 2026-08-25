@@ -67,11 +67,10 @@
     </div>
 </nav>
 
-<div class="columns is-gapless" id="main-container" style="height: calc(100vh - 3.5rem);">
-
-    <!-- SIDEBAR -->
-    <aside class="column is-2-desktop is-3-tablet is-hidden-touch menu" id="sidebar-menu" style="border-right: 1px solid var(--bulma-border-weak); padding: 1rem; background-color: var(--bulma-scheme-main-bis); overflow-y: auto;">
-        <ul class="menu-list">
+<!-- SECONDARY NAV (formerly sidebar) -->
+<aside class="menu is-hidden-touch" id="sidebar-menu" style="border-bottom: 1px solid var(--bulma-border-weak); padding: 0.5rem 1.5rem; background-color: var(--bulma-scheme-main-bis);">
+    <div class="is-flex is-align-items-center" style="gap: 2rem; overflow-x: auto;">
+        <ul class="menu-list" style="display: flex; gap: 0.5rem; margin: 0; padding: 0;">
             <li><a class="navitem is-active" data-view="lectura"><span class="pin"></span> Nueva lectura</a></li>
             <li><a class="navitem" data-view="resultado"><span class="pin"></span> Resultado</a></li>
             <li><a class="navitem" data-view="historial"><span class="pin"></span> Historial</a></li>
@@ -80,11 +79,14 @@
             <li><a class="navitem" data-view="alertas"><span class="pin"></span> Alertas</a></li>
             <li><a class="navitem" data-view="lab"><span class="pin"></span> EnergiAI Lab <span class="tag is-warning is-light is-rounded ml-2" style="font-size:10px; height:18px;">BETA</span></a></li>
         </ul>
-        <p class="menu-label mt-4">Cuenta</p>
-        <ul class="menu-list">
+        <div class="is-divider-vertical is-hidden-touch" style="width: 1px; height: 24px; background: var(--bulma-border-weak);"></div>
+        <ul class="menu-list" style="display: flex; gap: 0.5rem; margin: 0; padding: 0;">
             <li><a class="navitem" data-view="config"><span class="pin"></span> Configuración</a></li>
         </ul>
-    </aside>
+    </div>
+</aside>
+
+<div class="columns is-gapless" id="main-container" style="height: calc(100vh - 7rem);">
 
     <!-- MAIN CONTENT -->
     <div class="column main-content-column" style="overflow-y: auto; padding: 2rem;">
@@ -118,8 +120,8 @@
                                             <option value="">Seleccionar...</option>
                                             <option value="Casa">Casa</option>
                                             <option value="Departamento">Departamento</option>
+                                            <option value="Comercial">Comercial</option>
                                             <option value="Oficina" disabled>Oficina (Próximamente)</option>
-                                            <option value="Local comercial" disabled>Local comercial (Próximamente)</option>
                                         </select>
                                     </div>
                                 </div>
